@@ -9,91 +9,104 @@ namespace ServerLibrary.Repositories.Implementations
 {
     public class FlightRepository : IFlightRepository
     {
-
-        private readonly AppDbContext db;
+        private readonly AppDbContext _db;
 
         public FlightRepository(AppDbContext db)
         {
-            this.db = db;
+            _db = db;
         }
 
         public async Task<GeneralReponse> CreateAsync(Flight flight)
         {
-            if(flight == null) return new GeneralReponse(false,"Flight was not found");
+            if (flight == null)
+                return new GeneralReponse(false, "Flight data cannot be null");
 
             try
             {
                 flight.FlightNumber = Guid.NewGuid().ToString().Substring(0, 6);
-                await db.Flights.AddAsync(flight);
-                await db.SaveChangesAsync();
+                await _db.Flights.AddAsync(flight);
+                await _db.SaveChangesAsync();
+
+                return new GeneralReponse(true, "Flight created successfully");
             }
-            catch(DbException dbEx)
+            catch (DbUpdateException dbEx)
+            {
+                return new GeneralReponse(false, $"Database error: {dbEx.InnerException?.Message ?? dbEx.Message}");
+            }
+            catch (Exception ex)
+            {
+                return new GeneralReponse(false, $"Error creating flight: {ex.Message}");
+            }
+        }
+
+        public async Task<GeneralReponse> DeleteAsync(string flightNumber)
+        {
+            try
+            {
+                var flight = await _db.Flights.FirstOrDefaultAsync(x => x.FlightNumber == flightNumber);
+                if (flight == null)
+                    return new GeneralReponse(false, "Flight not found");
+
+                _db.Flights.Remove(flight);
+                await _db.SaveChangesAsync();
+
+                return new GeneralReponse(true, "Flight deleted successfully");
+            }
+            catch (DbException dbEx)
             {
                 return new GeneralReponse(false, $"Database error: {dbEx.Message}");
             }
             catch (Exception ex)
             {
-                return new GeneralReponse(false ,$"Something went wrong {ex.Message}");
+                return new GeneralReponse(false, $"Error deleting flight: {ex.Message}");
             }
-            return new GeneralReponse(true,$"Flight {flight.FlightNumber} added successfully");
-
-        }
-
-        public async Task<GeneralReponse> DeleteAsync(string flightNumber)
-        {
-            var flight = await db.Flights.FirstOrDefaultAsync(x => x.FlightNumber == flightNumber);
-
-            if (flight == null) return new GeneralReponse(false, "Not found");
-
-            try
-            {
-                db.Flights.Remove(flight);
-                await db.SaveChangesAsync();
-            }
-            catch(DbException dbEx)
-            {
-                return new GeneralReponse(false,$"Database error: {dbEx.Message}");
-            }
-            catch(Exception ex)
-            {
-                return new GeneralReponse(false, $"Something went wrong: {ex.Message}");
-            }
-            return new GeneralReponse(true,$"Flight {flightNumber} deleted successfuly");
         }
 
         public async Task<IEnumerable<Flight>> GetAllAsync()
-               => await db.Flights.AsNoTracking().ToListAsync();
+              => await _db.Flights.AsNoTracking()
+            .Include(x => x.Airline)
+            .Include(x => x.Plane)
+            .ToListAsync();
 
         public async Task<Flight?> GetByFlightNumberAsync(string flightNumber)
-               => await db.Flights.FirstOrDefaultAsync(x => x.FlightNumber == flightNumber);
+            => await _db.Flights
+            .Include(x => x.Airline).Include(x => x.Plane)
+            .FirstOrDefaultAsync(x => x.FlightNumber == flightNumber);
 
         public async Task<GeneralReponse> UpdateAsync(Flight flight)
         {
-            var entity = await db.Flights.FirstOrDefaultAsync(x => x.FlightNumber == flight.FlightNumber);
-
-            if (entity == null) return new GeneralReponse(false, "Not found");
-
-            entity.ArrivalDate = flight.ArrivalDate;
-            entity.ArrivalTime = flight.ArrivalTime;
-            entity.Origin  = flight.Origin; 
-            entity.DepartureTime = flight.DepartureTime;
-            entity.AvailableSeats = flight.AvailableSeats;
-            entity.TotalSeats  = flight.TotalSeats;
-            entity.BasePrice = flight.BasePrice;
-            entity.ClassType = flight.ClassType;
-            entity.DepartureDate = flight.DepartureDate;
-            entity.Destination = flight.Destination;
-            entity.DestinationImageUrl = flight.DestinationImageUrl;
-            entity.TimeIcon = flight.TimeIcon; 
-            
             try
             {
-                await db.SaveChangesAsync();
+                var existingFlight = await _db.Flights.FirstOrDefaultAsync(x => x.FlightNumber == flight.FlightNumber);
+                if (existingFlight == null)
+                    return new GeneralReponse(false, "Flight not found");
+
+                // Update properties
+                existingFlight.ArrivalDate = flight.ArrivalDate;
+                existingFlight.ArrivalTime = flight.ArrivalTime;
+                existingFlight.Origin = flight.Origin;
+                existingFlight.DepartureTime = flight.DepartureTime;
+                existingFlight.AvailableSeats = flight.AvailableSeats;
+                existingFlight.TotalSeats = flight.TotalSeats;
+                existingFlight.BasePrice = flight.BasePrice;
+                existingFlight.ClassType = flight.ClassType;
+                existingFlight.DepartureDate = flight.DepartureDate;
+                existingFlight.Destination = flight.Destination;
+                existingFlight.DestinationImageUrl = flight.DestinationImageUrl;
+                existingFlight.TimeIcon = flight.TimeIcon;
+
+                await _db.SaveChangesAsync();
+
+                return new GeneralReponse(true, "Flight updated successfully");
             }
-            catch(DbException dbEx) {
-                return new GeneralReponse(false, $"Database error: {dbEx.Message}");
+            catch (DbUpdateException dbEx)
+            {
+                return new GeneralReponse(false, $"Database error: {dbEx.InnerException?.Message ?? dbEx.Message}");
             }
-            return new GeneralReponse(true,$"Flight {flight.FlightNumber} updated successfuly");
+            catch (Exception ex)
+            {
+                return new GeneralReponse(false, $"Error updating flight: {ex.Message}");
+            }
         }
     }
 }

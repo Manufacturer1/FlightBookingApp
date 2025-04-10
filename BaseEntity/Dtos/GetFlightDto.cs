@@ -6,6 +6,8 @@ namespace BaseEntity.Dtos
     public class GetFlightDto
     {
         public string FlightNumber { get; set; } = string.Empty;
+        public int AirlineId { get; set; }
+        public int PlaneId { get; set; }
         public string? ClassType { get; set; } = string.Empty;
         public string TripType {  get; set; } = string.Empty;
         public string Origin { get; set; } = string.Empty;

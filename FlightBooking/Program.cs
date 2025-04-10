@@ -1,3 +1,4 @@
+using AutoMapper;
 using BaseEntity.Configurations;
 using BaseEntity.Entities;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -8,6 +9,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using ServerLibrary.BackgroundServices;
 using ServerLibrary.Data;
+using ServerLibrary.MappingProfiles;
 using ServerLibrary.Repositories.Implementations;
 using ServerLibrary.Repositories.Interfaces;
 using ServerLibrary.Services.Implementations;
@@ -56,6 +58,8 @@ builder.Services.AddSwaggerGen(options =>
 
 });
 
+
+
 //Database configuration
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
@@ -63,6 +67,9 @@ builder.Services.AddDbContext<AppDbContext>(options =>
         throw new InvalidOperationException("Your connection string is not found."));
 
 });
+// Automapper configurations
+builder.Services.AddAutoMapper(typeof(MappingProfile));
+
 
 //Identity configurations
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
@@ -150,6 +157,9 @@ builder.Services.AddHostedService<FlightDateUpdaterService>();
 // Repositories register
 builder.Services.AddScoped<IAuthRepository, AuthRepository>();
 builder.Services.AddScoped<IFlightRepository, FlightRepository>();
+builder.Services.AddScoped<IAirlineRepository, AirlineRepository>();
+builder.Services.AddScoped<IPlaneRepository, PlaneRepository>();
+builder.Services.AddScoped<IBaggageRepository,BaggageRepository>();
 
 
 
@@ -157,6 +167,9 @@ builder.Services.AddScoped<IFlightRepository, FlightRepository>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IFileService, FileService>();
 builder.Services.AddScoped<IFlightService, FlightService>();
+builder.Services.AddScoped<IAirlineService,AirlineService>();
+builder.Services.AddScoped<IPlaneService,PlaneService>();
+builder.Services.AddScoped<IBaggageService,BaggageService>();
 
 
 var app = builder.Build();

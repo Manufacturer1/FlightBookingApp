@@ -8,7 +8,10 @@ namespace BaseEntity.Dtos
     {
         [Required]
         public string FlightNumber { get; set; } = string.Empty;
-
+        [Required]
+        public int AirlineId { get; set; }
+        [Required]
+        public int PlaneId { get; set; }
         public string? ClassType { get; set; } = string.Empty;
         public string TripType { get; set; } = string.Empty;
         public string Origin { get; set; } = string.Empty;

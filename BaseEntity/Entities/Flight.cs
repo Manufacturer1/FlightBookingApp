@@ -43,5 +43,11 @@ namespace BaseEntity.Entities
         public string ArrivalTime { get; set; } = string.Empty;
 
 
+        public int AirlineId { get; set; }
+        public Airline? Airline { get; set; }
+
+
+        public int PlaneId { get; set; }
+        public Plane? Plane { get; set; } 
     }
 }

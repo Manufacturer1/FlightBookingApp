@@ -9,6 +9,12 @@ namespace BaseEntity.Dtos
         [Required]
         public string? ClassType { get; set; } = string.Empty;
         [Required]
+        public int AirlineId { get; set; }
+
+        [Required]
+        public int PlaneId { get; set; }
+
+        [Required]
         public string TripType { get; set; } = string.Empty;
         [Required]
         public string Origin { get; set; } = string.Empty;

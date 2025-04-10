@@ -1,4 +1,5 @@
-﻿using BaseEntity.Dtos;
+﻿using AutoMapper;
+using BaseEntity.Dtos;
 using BaseEntity.Entities;
 using BaseEntity.Responses;
 using Microsoft.AspNetCore.Http;
@@ -11,16 +12,19 @@ namespace ServerLibrary.Services.Implementations
     {
         private readonly IFlightRepository _flightRepository;
         private readonly IFileService _fileService;
+        private readonly IMapper _mapper;
 
-        public FlightService(IFlightRepository flightRepository, IFileService fileService)
+        public FlightService(IFlightRepository flightRepository, IFileService fileService,IMapper mapper)
         {
             _flightRepository = flightRepository;
             _fileService = fileService;
+            _mapper = mapper;
         }
 
         public async Task<IEnumerable<FlightCardResponseDto>> GetFlightCards(FlightCardRequestDto flightCardRequest)
         {
             var flights = await _flightRepository.GetAllAsync();
+
 
             string classTypeString = flightCardRequest.ClassType.ToString();
             string tripTypeString = flightCardRequest.TripType.ToString();
@@ -43,8 +47,10 @@ namespace ServerLibrary.Services.Implementations
                 .Where(x => !flightCardRequest.ReturnDate.HasValue ||
                            (x.ArrivalDate.Date == flightCardRequest.ReturnDate.Value.Date))
                 .Where(x => x.TripType.Equals(tripTypeString, StringComparison.OrdinalIgnoreCase));
+            
 
-            List<FlightCardResponseDto> allFlights = [.. directFlights.Select(ToFlightCard), .. indirectFlights.Select(ToFlightCard)];
+
+            List<FlightCardResponseDto> allFlights = [.. _mapper.Map<IEnumerable<FlightCardResponseDto>>(directFlights), .. _mapper.Map<IEnumerable<FlightCardResponseDto>>(indirectFlights)];
 
             return allFlights;
         }
@@ -57,7 +63,9 @@ namespace ServerLibrary.Services.Implementations
 
                 var createdImageName = await UploadImage(createFlight.DestinationImage!);
 
-                var flight = ToFlightEntity(createFlight,createdImageName);
+                var flight = _mapper.Map<Flight>(createFlight);
+
+                flight.DestinationImageUrl = createdImageName;
 
                 if (TimeSpan.TryParse(flight.DepartureTime, out var timeSpan))
                     flight.TimeIcon = GetTime(timeSpan);
@@ -77,14 +85,14 @@ namespace ServerLibrary.Services.Implementations
 
         public async Task<GeneralReponse> DeleteAsync(string flightNumber)
         {
-           return await _flightRepository.DeleteAsync(flightNumber);    
+            return await _flightRepository.DeleteAsync(flightNumber);
         }
 
         public async Task<IEnumerable<GetFlightDto>> GetAllAsync()
         {
            var flights = await _flightRepository.GetAllAsync();
             
-            return flights.Select(ToGetFlightDto);
+            return _mapper.Map<IEnumerable<GetFlightDto>>(flights);
         }
 
         public async Task<GetFlightDto?> GetByFlightNumberAsync(string flightNumber)
@@ -93,7 +101,7 @@ namespace ServerLibrary.Services.Implementations
 
             if (flight == null) return null;
 
-            return ToGetFlightDto(flight);
+            return _mapper.Map<GetFlightDto>(flight);
 
         }
 
@@ -107,15 +115,16 @@ namespace ServerLibrary.Services.Implementations
                     return new GeneralReponse(false, "Flight not found");
 
                 string imageUrl = originalFlight.DestinationImageUrl;
+                var flight = _mapper.Map<Flight>(originalFlight);
 
                 if (updateFlight.DestinationImage != null)
                 {
                     imageUrl = await UploadImage(updateFlight.DestinationImage);
 
                     _fileService.DeleteFile(originalFlight.DestinationImageUrl);
+                    flight.DestinationImageUrl = imageUrl;
                 }
 
-                var flight = FromUpdateToFlightEntity(updateFlight, imageUrl);
 
                 return await _flightRepository.UpdateAsync(flight);
 
@@ -141,83 +150,6 @@ namespace ServerLibrary.Services.Implementations
 
             return createdImageName;
         }
-
-        #region MAPPINGS
-        private Flight ToFlightEntity(CreateFlightDto model,string imageName)
-        {
-            return new Flight
-            {
-                ClassType = model.ClassType,
-                ArrivalDate = model.ArrivalDate,
-                AvailableSeats = model.AvailableSeats,
-                ArrivalTime = model.ArrivalTime,
-                BasePrice = model.BasePrice,
-                DepartureDate = model.DepartureDate,
-                DepartureTime = model.DepartureTime,
-                Destination = model.Destination,    
-                DestinationImageUrl = imageName,
-                Origin = model.Origin,  
-                TotalSeats = model.TotalSeats,
-                TripType = model.TripType,
-            };
-        }
-        private Flight FromUpdateToFlightEntity(UpdateFlightDto updateFlight,string imageUrl)
-        {
-            return new Flight
-            {
-                ClassType = updateFlight.ClassType,
-                ArrivalDate = updateFlight.ArrivalDate,
-                ArrivalTime= updateFlight.ArrivalTime,
-                AvailableSeats= updateFlight.AvailableSeats,
-                BasePrice= updateFlight.BasePrice,
-                DepartureDate= updateFlight.DepartureDate,
-                DepartureTime= updateFlight.DepartureTime,  
-                Destination= updateFlight.Destination,
-                DestinationImageUrl = imageUrl,
-                FlightNumber = updateFlight.FlightNumber,
-                Origin= updateFlight.Origin,
-                TotalSeats = updateFlight.TotalSeats,
-                TripType= updateFlight.TripType,
-            };
-        }
-        private GetFlightDto ToGetFlightDto(Flight flight)
-        {
-            return new GetFlightDto
-            {
-                ClassType = flight.ClassType,
-                ArrivalDate = flight.ArrivalDate,
-                ArrivalTime = flight.ArrivalTime,
-                AvailableSeats = flight.AvailableSeats,
-                BasePrice = flight.BasePrice,
-                DepartureDate = flight.DepartureDate,
-                DepartureTime= flight.DepartureTime,
-                Destination = flight.Destination,
-                Origin= flight.Origin,
-                DestinationImageUrl= flight.DestinationImageUrl,
-                FlightNumber = flight.FlightNumber,
-                TimeIcon= flight.TimeIcon,  
-                TotalSeats = flight.TotalSeats,
-                TripType= flight.TripType,
-            };
-        }
-        private FlightCardResponseDto ToFlightCard(Flight flight)
-        {
-            return new FlightCardResponseDto
-            {
-                FlightNumber= flight.FlightNumber,
-                ArrivalDate= flight.ArrivalDate,
-                ArrivalTime= flight.ArrivalTime,
-                BasePrice= flight.BasePrice,
-                DepartureDate= flight.DepartureDate,
-                DepartureTime = flight.DepartureTime,
-                Destination= flight.Destination,
-                DestinationImageUrl = flight.DestinationImageUrl,
-                Origin = flight.Origin,
-                TimeIcon = flight.TimeIcon,
-                TripType = flight.TripType,
-            };
-        }
-        #endregion
 
     }
 }

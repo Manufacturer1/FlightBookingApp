@@ -34,7 +34,7 @@ namespace FlightBooking.Controllers
             if (!result.Flag)
                 return BadRequest(result.Message);
 
-            return Ok(result.Message);
+            return NoContent();
         }
 
         [HttpPut("update")]

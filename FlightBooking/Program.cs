@@ -3,6 +3,7 @@ using BaseEntity.Configurations;
 using BaseEntity.Entities;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
@@ -160,6 +161,7 @@ builder.Services.AddScoped<IFlightRepository, FlightRepository>();
 builder.Services.AddScoped<IAirlineRepository, AirlineRepository>();
 builder.Services.AddScoped<IPlaneRepository, PlaneRepository>();
 builder.Services.AddScoped<IBaggageRepository,BaggageRepository>();
+builder.Services.AddScoped<IItineraryRepository, ItineraryRepository>();
 
 
 
@@ -170,6 +172,7 @@ builder.Services.AddScoped<IFlightService, FlightService>();
 builder.Services.AddScoped<IAirlineService,AirlineService>();
 builder.Services.AddScoped<IPlaneService,PlaneService>();
 builder.Services.AddScoped<IBaggageService,BaggageService>();
+builder.Services.AddScoped<IItineraryService, ItineraryService>();
 
 
 var app = builder.Build();
@@ -199,6 +202,10 @@ app.UseStaticFiles(new StaticFileOptions
 {
     FileProvider = new PhysicalFileProvider(
             Path.Combine(builder.Environment.ContentRootPath, "Uploads")),
+    ContentTypeProvider = new FileExtensionContentTypeProvider
+    {
+        Mappings = { [".svg"] = "image/svg+xml"}
+    },
     RequestPath = "/Resources"
 });
 

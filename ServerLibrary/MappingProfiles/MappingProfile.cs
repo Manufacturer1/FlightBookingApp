@@ -12,66 +12,54 @@ namespace ServerLibrary.MappingProfiles
 
             CreateMap<CreateFlightDto, Flight>()
                 .ForMember(dest => dest.DestinationImageUrl, opt => opt.Ignore())
-                .ForMember(dest => dest.Airline, opt => opt.Ignore())
                 .ForMember(dest => dest.Plane, opt => opt.Ignore())
-                .ForMember(dest => dest.FlightNumber, opt => opt.Ignore())
-                .AfterMap((src, dest) =>
-                {
-                    dest.Airline = null;
-                    dest.Plane = null;
-                });
+                .ForMember(dest => dest.FlightNumber, opt => opt.Ignore());
 
-            CreateMap<UpdateFlightDto, Flight>()
-                .ForMember(dest => dest.DestinationImageUrl, opt => opt.Ignore())
-                .ForMember(dest => dest.Airline, opt => opt.Ignore())
-                .ForMember(dest => dest.Plane, opt => opt.Ignore())
-                .AfterMap((src, dest) =>
-                {
-                    dest.Airline = null;
-                    dest.Plane = null;
-                });
+            CreateMap<UpdateAirlineDto, Airline>()
+                .ForAllMembers(opt => opt.Condition((src, srcMember) => srcMember != null));
+
+
+
 
 
             CreateMap<CreateAirlineDto, Airline>()
                 .ForMember(dest => dest.AirlineImageUrl,
                     opt => opt.Ignore())
-                .ForMember(dest => dest.Flights,
-                    opt => opt.Ignore())
                 .ForMember(dest => dest.Id,
                     opt => opt.Ignore())
-                .ForMember(dest => dest.BaggagePolicy,opt => opt.Ignore())
-                .AfterMap((src, dest) =>
-                {
-                    dest.Flights = null;
-                    dest.BaggagePolicy = null;
-                });
+                .ForMember(dest => dest.BaggagePolicy, opt => opt.Ignore())
+                .ForMember(dest => dest.Itineraries, opt => opt.Ignore());
 
             CreateMap<UpdateAirlineDto, Airline>()
                 .ForMember(dest => dest.AirlineImageUrl, opt => opt.Ignore())
-                .ForMember(dest => dest.Flights, opt => opt.Ignore())
-                .ForMember(dest => dest.BaggagePolicy,opt => opt.Ignore())  
-                .AfterMap((src, dest) =>
-                {
-                    dest.BaggagePolicy = null;
-                    dest.Flights = null;
-                });
+                .ForMember(dest => dest.BaggagePolicy, opt => opt.Ignore())
+                .ForMember(dest => dest.Itineraries, opt => opt.Ignore());
+
 
 
             CreateMap<CreatePlaneDto, Plane>()
                 .ForMember(dest => dest.Flights, opt => opt.Ignore())
-                .ForMember(dest => dest.Id, opt => opt.Ignore())
-                .AfterMap((src, dest) =>
-                {
-                    dest.Flights = null;
-                });
+                .ForMember(dest => dest.Id, opt => opt.Ignore());
+  
 
             CreateMap<CreateBaggageDto, BaggagePolicy>()
                 .ForMember(dest => dest.Id, opt => opt.Ignore())
-                .ForMember(dest => dest.Airline, opt => opt.Ignore())
-                .AfterMap((src, dest) =>
-                {
-                    dest.Airline = null;
-                });
+                .ForMember(dest => dest.Airlines, opt => opt.Ignore());
+
+
+
+            CreateMap<CreateItineraryDto, Itinerary>()
+                .ForMember(dest => dest.Segments, opt => opt.Ignore())
+                .ForMember(dest => dest.Airline, opt => opt.Ignore());
+    
+
+            CreateMap<FlightSegmentRequest, FlightSegment>()
+                .ForMember(dest => dest.SegmentOrder, opt => opt.Ignore())
+                .ForMember(dest => dest.Flight, opt => opt.Ignore())
+                .ForMember(dest => dest.Itinerary, opt => opt.Ignore())
+                .ForMember(dest => dest.ItineraryId, opt => opt.Ignore());
+
+           
 
 
             //From entity to dto
@@ -87,7 +75,9 @@ namespace ServerLibrary.MappingProfiles
 
             CreateMap<Plane,GetPlaneDto>();
             CreateMap<BaggagePolicy,GetBaggageDto>();
-            
+
+            CreateMap<Itinerary, GetItineraryDto>();
+            CreateMap<FlightSegment, GetFlightSegmentDto>();
 
             
         }

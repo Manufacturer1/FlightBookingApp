@@ -39,7 +39,7 @@ namespace FlightBooking.Controllers
 
         [HttpPut("update")]
         public async Task<IActionResult> UpdateFlight([FromForm] UpdateFlightDto request)
-        {
+        {    
             var result = await _flightService.UpdateAsync(request);
 
             if (!result.Flag)
@@ -47,6 +47,7 @@ namespace FlightBooking.Controllers
 
             return Ok(result.Message);
         }
+
 
         [HttpGet("flight/{flightNumber}")]
         public async Task<IActionResult> GetFlight(string flightNumber)

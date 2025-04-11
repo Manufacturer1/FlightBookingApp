@@ -8,8 +8,6 @@ namespace BaseEntity.Dtos
     {
         [Required]
         public string? ClassType { get; set; } = string.Empty;
-        [Required]
-        public int AirlineId { get; set; }
 
         [Required]
         public int PlaneId { get; set; }

@@ -62,11 +62,11 @@ namespace ServerLibrary.Repositories.Implementations
 
         public async Task<IEnumerable<BaggagePolicy>> GetAllAsync()
                 => await db.Baggages.AsNoTracking()
-                      .Include(x => x.Airline)
+                      .Include(x => x.Airlines)
                          .ToListAsync();
 
         public async Task<BaggagePolicy?> GetByIdAsync(int id)
-            => await db.Baggages.Include(x => x.Airline).FirstOrDefaultAsync(x => x.Id == id);
+            => await db.Baggages.Include(x => x.Airlines).FirstOrDefaultAsync(x => x.Id == id);
 
         public async Task<GeneralReponse> UpdateAsync(BaggagePolicy baggage)
         {

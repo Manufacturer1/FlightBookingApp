@@ -76,6 +76,8 @@ namespace ServerLibrary.Repositories.Implementations
 
             entity.Model = plane.Model;
             entity.Name = plane.Name;
+            entity.SeatPitch = plane.SeatPitch;
+            entity.SeatLayout = plane.SeatLayout;
 
             try
             {

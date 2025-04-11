@@ -27,7 +27,7 @@ namespace ServerLibrary.Repositories.Implementations
                 await _db.Flights.AddAsync(flight);
                 await _db.SaveChangesAsync();
 
-                return new GeneralReponse(true, "Flight created successfully");
+                return new GeneralReponse(true, $"Flight {flight.FlightNumber} created successfully");
             }
             catch (DbUpdateException dbEx)
             {
@@ -64,13 +64,14 @@ namespace ServerLibrary.Repositories.Implementations
 
         public async Task<IEnumerable<Flight>> GetAllAsync()
               => await _db.Flights.AsNoTracking()
-            .Include(x => x.Airline)
             .Include(x => x.Plane)
+            .Include(x => x.Segments)
             .ToListAsync();
 
         public async Task<Flight?> GetByFlightNumberAsync(string flightNumber)
             => await _db.Flights
-            .Include(x => x.Airline).Include(x => x.Plane)
+            .Include(x => x.Plane)
+            .Include(x => x.Segments)
             .FirstOrDefaultAsync(x => x.FlightNumber == flightNumber);
 
         public async Task<GeneralReponse> UpdateAsync(Flight flight)

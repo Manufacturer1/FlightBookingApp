@@ -10,6 +10,8 @@ namespace ServerLibrary.Data
 
 
         public DbSet<Flight> Flights { get; set; }
+        public DbSet<Itinerary> Itineraries { get; set; }
+        public DbSet<FlightSegment> Segments { get; set; }
         public DbSet<Airline> Airlines { get; set; }
         public DbSet<Plane> Planes { get; set; }
         public DbSet<BaggagePolicy> Baggages { get; set; }
@@ -36,22 +38,18 @@ namespace ServerLibrary.Data
 
 
             modelBuilder.Entity<Flight>()
-                .HasOne(f => f.Airline)
-                .WithMany(a => a.Flights)
-                .HasForeignKey(f => f.AirlineId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            modelBuilder.Entity<Flight>()
                 .HasOne(f => f.Plane)
                 .WithMany(P => P.Flights)
                 .HasForeignKey(f => f.PlaneId)
-                .OnDelete(DeleteBehavior.NoAction);
+                .OnDelete(DeleteBehavior.SetNull);
 
             modelBuilder.Entity<Airline>()
                 .HasOne(a => a.BaggagePolicy)
-                .WithOne(b => b.Airline)
-                .HasForeignKey<Airline>(a => a.BaggagePolicyId)
-                .OnDelete(DeleteBehavior.NoAction);
+                .WithMany(bp => bp.Airlines)
+                .HasForeignKey(a => a.BaggagePolicyId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+
 
             modelBuilder.Entity<BaggagePolicy>(entity =>
             {
@@ -77,6 +75,24 @@ namespace ServerLibrary.Data
                 
 
             });
+
+            modelBuilder.Entity<FlightSegment>()
+                .HasOne(fs => fs.Flight)
+                .WithMany(f => f.Segments)
+                .HasForeignKey(fs => fs.FlightNumber)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<FlightSegment>()
+                .HasOne(fs => fs.Itinerary)
+                .WithMany(i => i.Segments)
+                .HasForeignKey(fs => fs.ItineraryId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Itinerary>()
+                .HasOne(a => a.Airline)
+                .WithMany(i => i.Itineraries)
+                .HasForeignKey(i => i.AirlineId)
+                .OnDelete(DeleteBehavior.Cascade);
 
         }
 

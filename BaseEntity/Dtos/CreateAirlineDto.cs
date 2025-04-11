@@ -11,7 +11,6 @@ namespace BaseEntity.Dtos
         public IFormFile? AirlineImage { get; set; }
         [Required]
         public string AirlineBgColor { get; set; } = "#0D78C9FF";
-
         [Required]
         public int BaggagePolicyId { get; set; }
     }

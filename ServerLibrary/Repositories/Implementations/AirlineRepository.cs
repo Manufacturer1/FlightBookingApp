@@ -58,13 +58,13 @@ namespace ServerLibrary.Repositories.Implementations
 
         public async Task<IEnumerable<Airline>> GetAllAsync()
                => await db.Airlines.AsNoTracking()
-            .Include(x => x.Flights)
+            .Include(x => x.Itineraries)
             .Include(x => x.BaggagePolicy)
             .ToListAsync();
 
         public async Task<Airline?> GetByIdAsync(int id)
             => await db.Airlines
-            .Include(x => x.Flights)
+            .Include(x => x.Itineraries)
             .Include(x => x.BaggagePolicy)
             .FirstOrDefaultAsync(x => x.Id == id);
 

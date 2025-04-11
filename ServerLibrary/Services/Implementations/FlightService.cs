@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Azure.Core;
 using BaseEntity.Dtos;
 using BaseEntity.Entities;
 using BaseEntity.Responses;
@@ -13,14 +14,19 @@ namespace ServerLibrary.Services.Implementations
         private readonly IFlightRepository _flightRepository;
         private readonly IFileService _fileService;
         private readonly IMapper _mapper;
+        private readonly IItineraryRepository _itineraryRepository;
 
-        public FlightService(IFlightRepository flightRepository, IFileService fileService,IMapper mapper)
+        public FlightService(IFlightRepository flightRepository, IFileService fileService,IMapper mapper,IItineraryRepository itineraryRepository)
         {
             _flightRepository = flightRepository;
             _fileService = fileService;
             _mapper = mapper;
+            _itineraryRepository = itineraryRepository;
         }
-
+        // Also i need to handle the problem when there are multiple indirect flights associated with airlines
+        // Currently we have 2 indirect flights Houston -> New York -> Los Angeles that correspond to airline 6.
+        // What if we want to add more flights that has for exemple Houston -> Washington -> Los Angeles and airline 7 for exemple.
+        // 
         public async Task<IEnumerable<FlightCardResponseDto>> GetFlightCards(FlightCardRequestDto flightCardRequest)
         {
             var flights = await _flightRepository.GetAllAsync();
@@ -38,6 +44,8 @@ namespace ServerLibrary.Services.Implementations
                            (x.ArrivalDate.Date == flightCardRequest.ReturnDate.Value.Date))
                 .Where(x => x.TripType.Equals(tripTypeString, StringComparison.OrdinalIgnoreCase));
 
+            var d =  directFlights;
+
             var indirectFlights = flights
                 .Where(x => (x.Origin.Equals(flightCardRequest.Origin, StringComparison.OrdinalIgnoreCase) ||
                            x.Destination.Equals(flightCardRequest.Destination, StringComparison.OrdinalIgnoreCase)))
@@ -47,10 +55,42 @@ namespace ServerLibrary.Services.Implementations
                 .Where(x => !flightCardRequest.ReturnDate.HasValue ||
                            (x.ArrivalDate.Date == flightCardRequest.ReturnDate.Value.Date))
                 .Where(x => x.TripType.Equals(tripTypeString, StringComparison.OrdinalIgnoreCase));
-            
 
 
-            List<FlightCardResponseDto> allFlights = [.. _mapper.Map<IEnumerable<FlightCardResponseDto>>(directFlights), .. _mapper.Map<IEnumerable<FlightCardResponseDto>>(indirectFlights)];
+
+            var allItineraries = await _itineraryRepository.GetAllAsync();
+
+            var requestedItineraries = allItineraries.Where(x => 
+            x.Origin.Equals(flightCardRequest.Origin,StringComparison.OrdinalIgnoreCase) 
+            && x.Destination.Equals(flightCardRequest.Destination,StringComparison.OrdinalIgnoreCase));
+
+            var itinerariesToAdd = new List<Flight>();
+
+            if (requestedItineraries.Any())
+            {
+                foreach (var itinerary in requestedItineraries)
+                {
+                    var itineraryFlights = itinerary.Segments?
+                        .Where(s => s.Flight != null)
+                        .OrderBy(s => s.SegmentOrder)
+                        .Select(s => s.Flight)
+                        .ToList();
+
+                    if(itineraryFlights != null && itineraryFlights.Any())
+                    { 
+                        itinerariesToAdd.AddRange(itineraryFlights!);
+                    }
+                }
+
+            }
+
+            List<FlightCardResponseDto> allFlights = [.. _mapper.Map<IEnumerable<FlightCardResponseDto>>(directFlights), .. _mapper.Map<IEnumerable<FlightCardResponseDto>>(itinerariesToAdd)];
+            allFlights = allFlights
+                .OrderBy(x => x.Origin.Equals(flightCardRequest.Origin, StringComparison.OrdinalIgnoreCase)
+                && x.Destination.Equals(flightCardRequest.Destination, StringComparison.OrdinalIgnoreCase)
+                ? 1 : 0)
+                 .ThenBy(x => x.DepartureDate) 
+                 .ToList();
 
             return allFlights;
         }
@@ -114,24 +154,59 @@ namespace ServerLibrary.Services.Implementations
                 if (originalFlight == null)
                     return new GeneralReponse(false, "Flight not found");
 
-                string imageUrl = originalFlight.DestinationImageUrl;
-                var flight = _mapper.Map<Flight>(originalFlight);
-
+           
                 if (updateFlight.DestinationImage != null)
                 {
-                    imageUrl = await UploadImage(updateFlight.DestinationImage);
-
+                    var imageUrl = await UploadImage(updateFlight.DestinationImage);
                     _fileService.DeleteFile(originalFlight.DestinationImageUrl);
-                    flight.DestinationImageUrl = imageUrl;
+                    originalFlight.DestinationImageUrl = imageUrl;
+                }
+                originalFlight.PlaneId = updateFlight.PlaneId;
+
+                if (updateFlight.ClassType != null)
+                    originalFlight.ClassType = updateFlight.ClassType;
+
+                if (updateFlight.TripType != null)
+                    originalFlight.TripType = updateFlight.TripType;
+
+                if (updateFlight.Origin != null)
+                    originalFlight.Origin = updateFlight.Origin;
+
+                if (updateFlight.Destination != null)
+                    originalFlight.Destination = updateFlight.Destination;
+
+                if (updateFlight.TotalSeats.HasValue)
+                    originalFlight.TotalSeats = updateFlight.TotalSeats.Value;
+
+                if (updateFlight.AvailableSeats.HasValue)
+                    originalFlight.AvailableSeats = updateFlight.AvailableSeats.Value;
+
+                if (updateFlight.BasePrice.HasValue)
+                    originalFlight.BasePrice = updateFlight.BasePrice.Value;
+
+                if (updateFlight.DepartureDate.HasValue)
+                    originalFlight.DepartureDate = updateFlight.DepartureDate.Value;
+
+                if (updateFlight.ArrivalDate.HasValue)
+                    originalFlight.ArrivalDate = updateFlight.ArrivalDate.Value;
+
+                if (updateFlight.DepartureTime != null)
+                {
+                    originalFlight.DepartureTime = updateFlight.DepartureTime;
+                    if (TimeSpan.TryParse(updateFlight.DepartureTime, out var timeSpan))
+                    {
+                        originalFlight.TimeIcon = GetTime(timeSpan);
+                    }
                 }
 
+                if (updateFlight.ArrivalTime != null)
+                    originalFlight.ArrivalTime = updateFlight.ArrivalTime;
 
-                return await _flightRepository.UpdateAsync(flight);
-
+                return await _flightRepository.UpdateAsync(originalFlight);
             }
             catch (Exception ex)
             {
-                return new GeneralReponse(false, $"Exception occured: {ex.Message}");
+                return new GeneralReponse(false, $"Exception occurred: {ex.Message}");
             }
         }
 

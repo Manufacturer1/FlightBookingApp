@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using ServerLibrary.Data;
 
@@ -11,9 +12,11 @@ using ServerLibrary.Data;
 namespace ServerLibrary.Data.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250410221044_changedairlineRelation")]
+    partial class changedairlineRelation
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -165,6 +168,9 @@ namespace ServerLibrary.Data.Migrations
                     b.Property<string>("FlightNumber")
                         .HasColumnType("nvarchar(450)");
 
+                    b.Property<int>("AirlineId")
+                        .HasColumnType("int");
+
                     b.Property<DateTime>("ArrivalDate")
                         .HasColumnType("date");
 
@@ -217,6 +223,8 @@ namespace ServerLibrary.Data.Migrations
 
                     b.HasKey("FlightNumber");
 
+                    b.HasIndex("AirlineId");
+
                     b.HasIndex("PlaneId");
 
                     b.ToTable("Flights");
@@ -257,9 +265,6 @@ namespace ServerLibrary.Data.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("AirlineId")
-                        .HasColumnType("int");
-
                     b.Property<string>("Destination")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -268,9 +273,10 @@ namespace ServerLibrary.Data.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.HasKey("Id");
+                    b.Property<DateTime>("TravelDate")
+                        .HasColumnType("datetime2");
 
-                    b.HasIndex("AirlineId");
+                    b.HasKey("Id");
 
                     b.ToTable("Itineraries");
                 });
@@ -290,13 +296,6 @@ namespace ServerLibrary.Data.Migrations
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("SeatLayout")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("SeatPitch")
-                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
@@ -449,10 +448,18 @@ namespace ServerLibrary.Data.Migrations
 
             modelBuilder.Entity("BaseEntity.Entities.Flight", b =>
                 {
+                    b.HasOne("BaseEntity.Entities.Airline", "Airline")
+                        .WithMany("Flights")
+                        .HasForeignKey("AirlineId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("BaseEntity.Entities.Plane", "Plane")
                         .WithMany("Flights")
                         .HasForeignKey("PlaneId")
                         .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Airline");
 
                     b.Navigation("Plane");
                 });
@@ -460,7 +467,7 @@ namespace ServerLibrary.Data.Migrations
             modelBuilder.Entity("BaseEntity.Entities.FlightSegment", b =>
                 {
                     b.HasOne("BaseEntity.Entities.Flight", "Flight")
-                        .WithMany("Segments")
+                        .WithMany()
                         .HasForeignKey("FlightNumber")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -474,17 +481,6 @@ namespace ServerLibrary.Data.Migrations
                     b.Navigation("Flight");
 
                     b.Navigation("Itinerary");
-                });
-
-            modelBuilder.Entity("BaseEntity.Entities.Itinerary", b =>
-                {
-                    b.HasOne("BaseEntity.Entities.Airline", "Airline")
-                        .WithMany("Itineraries")
-                        .HasForeignKey("AirlineId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Airline");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -540,17 +536,12 @@ namespace ServerLibrary.Data.Migrations
 
             modelBuilder.Entity("BaseEntity.Entities.Airline", b =>
                 {
-                    b.Navigation("Itineraries");
+                    b.Navigation("Flights");
                 });
 
             modelBuilder.Entity("BaseEntity.Entities.BaggagePolicy", b =>
                 {
                     b.Navigation("Airlines");
-                });
-
-            modelBuilder.Entity("BaseEntity.Entities.Flight", b =>
-                {
-                    b.Navigation("Segments");
                 });
 
             modelBuilder.Entity("BaseEntity.Entities.Itinerary", b =>

@@ -1,12 +1,16 @@
-﻿using BaseEntity.Entities;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace BaseEntity.Dtos
 {
     public class CreatePlaneDto
     {
-        [Rquired]
-        public string Name { get; set; } = string.Empty;
-        [Rquired]
-        public string Model { get; set; } = string.Empty;
+        [Required]
+        public string Name { get; set; } = "Airbus";
+        [Required]
+        public string Model { get; set; } = "A320";
+        [Required]
+        public string SeatLayout { get; set; } = "3-3";
+        [Required]
+        public int SeatPitch { get; set; } = 29;
     }
 }

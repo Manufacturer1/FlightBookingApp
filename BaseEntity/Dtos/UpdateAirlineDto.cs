@@ -7,14 +7,9 @@ namespace BaseEntity.Dtos
     {
         [Required]
         public int Id { get; set; }
-        [Required]
-        public string Name { get; set; } = string.Empty;
-        [Required]
+        public int? BaggagePolicyId { get; set; }
+        public string? Name { get; set; }
         public IFormFile? AirlineImage { get; set; }
-        [Required]
-        public string AirlineBgColor { get; set; } = "#0D78C9FF";
-
-        [Required]
-        public int BaggagePolicyId { get; set; }
+        public string? AirlineBgColor { get; set; }
     }
 }

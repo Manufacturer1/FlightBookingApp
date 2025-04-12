@@ -23,76 +23,32 @@ namespace ServerLibrary.Services.Implementations
             _mapper = mapper;
             _itineraryRepository = itineraryRepository;
         }
-        // Also i need to handle the problem when there are multiple indirect flights associated with airlines
-        // Currently we have 2 indirect flights Houston -> New York -> Los Angeles that correspond to airline 6.
-        // What if we want to add more flights that has for exemple Houston -> Washington -> Los Angeles and airline 7 for exemple.
-        // 
+
         public async Task<IEnumerable<FlightCardResponseDto>> GetFlightCards(FlightCardRequestDto flightCardRequest)
         {
-            var flights = await _flightRepository.GetAllAsync();
+            var allItineraries = await _itineraryRepository.GetAllAsync();
+
+            var searchedItineraries = allItineraries.Where(x => 
+            x.Origin.Equals(flightCardRequest.Origin,StringComparison.OrdinalIgnoreCase)
+            && x.Destination.Equals(flightCardRequest.Destination,StringComparison.OrdinalIgnoreCase));
+
+
+            var flights = searchedItineraries.SelectMany(x => x.Segments!).OrderBy(s => s.SegmentOrder).Select(f => f.Flight);
 
 
             string classTypeString = flightCardRequest.ClassType.ToString();
             string tripTypeString = flightCardRequest.TripType.ToString();
 
-            var directFlights = flights
-                .Where(x => x.ClassType!.Equals(classTypeString, StringComparison.OrdinalIgnoreCase))
-                .Where(x => x.Origin.Equals(flightCardRequest.Origin, StringComparison.OrdinalIgnoreCase))
-                .Where(x => x.Destination.Equals(flightCardRequest.Destination, StringComparison.OrdinalIgnoreCase))
-                .Where(x => x.DepartureDate.Date == flightCardRequest.DepartureDate.Date)
+
+            var searchedFlights = flights
+                .Where(x => x!.ClassType!.Equals(classTypeString, StringComparison.OrdinalIgnoreCase))
+                .Where(x => x!.DepartureDate.Date == flightCardRequest.DepartureDate.Date)
                 .Where(x => !flightCardRequest.ReturnDate.HasValue ||
-                           (x.ArrivalDate.Date == flightCardRequest.ReturnDate.Value.Date))
-                .Where(x => x.TripType.Equals(tripTypeString, StringComparison.OrdinalIgnoreCase));
-
-            var d =  directFlights;
-
-            var indirectFlights = flights
-                .Where(x => (x.Origin.Equals(flightCardRequest.Origin, StringComparison.OrdinalIgnoreCase) ||
-                           x.Destination.Equals(flightCardRequest.Destination, StringComparison.OrdinalIgnoreCase)))
-                .Where(x => !directFlights.Select(y => y.FlightNumber).Contains(x.FlightNumber))
-                .Where(x => x.ClassType!.Equals(classTypeString, StringComparison.OrdinalIgnoreCase))
-                .Where(x => x.DepartureDate.Date == flightCardRequest.DepartureDate.Date)
-                .Where(x => !flightCardRequest.ReturnDate.HasValue ||
-                           (x.ArrivalDate.Date == flightCardRequest.ReturnDate.Value.Date))
-                .Where(x => x.TripType.Equals(tripTypeString, StringComparison.OrdinalIgnoreCase));
+                           (x!.ArrivalDate.Date == flightCardRequest.ReturnDate.Value.Date))
+                .Where(x => x!.TripType.Equals(tripTypeString, StringComparison.OrdinalIgnoreCase));
 
 
-
-            var allItineraries = await _itineraryRepository.GetAllAsync();
-
-            var requestedItineraries = allItineraries.Where(x => 
-            x.Origin.Equals(flightCardRequest.Origin,StringComparison.OrdinalIgnoreCase) 
-            && x.Destination.Equals(flightCardRequest.Destination,StringComparison.OrdinalIgnoreCase));
-
-            var itinerariesToAdd = new List<Flight>();
-
-            if (requestedItineraries.Any())
-            {
-                foreach (var itinerary in requestedItineraries)
-                {
-                    var itineraryFlights = itinerary.Segments?
-                        .Where(s => s.Flight != null)
-                        .OrderBy(s => s.SegmentOrder)
-                        .Select(s => s.Flight)
-                        .ToList();
-
-                    if(itineraryFlights != null && itineraryFlights.Any())
-                    { 
-                        itinerariesToAdd.AddRange(itineraryFlights!);
-                    }
-                }
-
-            }
-
-            List<FlightCardResponseDto> allFlights = [.. _mapper.Map<IEnumerable<FlightCardResponseDto>>(directFlights), .. _mapper.Map<IEnumerable<FlightCardResponseDto>>(itinerariesToAdd)];
-            allFlights = allFlights
-                .OrderBy(x => x.Origin.Equals(flightCardRequest.Origin, StringComparison.OrdinalIgnoreCase)
-                && x.Destination.Equals(flightCardRequest.Destination, StringComparison.OrdinalIgnoreCase)
-                ? 1 : 0)
-                 .ThenBy(x => x.DepartureDate) 
-                 .ToList();
-
-            return allFlights;
+            return _mapper.Map<IEnumerable<FlightCardResponseDto>>(searchedFlights);
         }
         public async Task<GeneralReponse> AddAsync(CreateFlightDto createFlight)
         {

@@ -10,8 +10,6 @@ namespace BaseEntity.Dtos
         public string Origin { get; set; } = string.Empty;
         [Required]
         public string Destination { get; set; } = string.Empty;
-        [Required]
-        public DateTime TravelDate { get; set; }
 
         public ICollection<FlightSegmentRequest>? Segments { get; set; }
     }

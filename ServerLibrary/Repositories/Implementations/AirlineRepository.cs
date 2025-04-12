@@ -58,7 +58,8 @@ namespace ServerLibrary.Repositories.Implementations
 
         public async Task<IEnumerable<Airline>> GetAllAsync()
                => await db.Airlines.AsNoTracking()
-            .Include(x => x.Itineraries)
+            .Include(x => x.Itineraries!)
+            .ThenInclude(x => x.Segments)
             .Include(x => x.BaggagePolicy)
             .ToListAsync();
 

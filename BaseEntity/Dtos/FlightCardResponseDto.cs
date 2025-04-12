@@ -10,8 +10,8 @@ namespace BaseEntity.Dtos
         public string Origin { get; set; } = string.Empty;
         public string Destination { get; set; } = string.Empty;
         public string DestinationImageUrl { get; set; } = string.Empty;
-        public string TimeIcon { get; set; } = string.Empty;
         public decimal BasePrice { get; set; }
+        public string TimeIcon { get; set; } = string.Empty;
         public DateTime DepartureDate { get; set; }
         public DateTime ArrivalDate { get; set; }
         public string DepartureTime { get; set; } = string.Empty;

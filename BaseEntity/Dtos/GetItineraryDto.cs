@@ -1,4 +1,6 @@
-﻿namespace BaseEntity.Dtos
+﻿using System.ComponentModel.DataAnnotations.Schema;
+
+namespace BaseEntity.Dtos
 {
     public class GetItineraryDto
     {
@@ -6,6 +8,14 @@
         public int AirlineId { get; set; }
         public string Origin { get; set; } = string.Empty;
         public string Destination { get; set; } = string.Empty;
+        public decimal TotalPrice { get; set; }
+        public DateTime DepartureDate { get; set; }
+        public DateTime ArrivalDate { get; set; }
+        public string DepartureTime { get; set; } = string.Empty;
+        public string ArrivalTime { get; set; } = string.Empty;
+        public string DurationTime { get; set; } = string.Empty;
         public ICollection<GetFlightSegmentDto>? Segments { get; set; }
+
+
     }
 }

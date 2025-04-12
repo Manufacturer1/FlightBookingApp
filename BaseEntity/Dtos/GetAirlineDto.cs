@@ -8,6 +8,7 @@
         public string AirlineImageUrl { get; set; } = string.Empty;
         public string AirlineBgColor { get; set; } = "#0D78C9FF";
         public IEnumerable<GetItineraryDto>? Itineraries { get; set; }
+       
 
     }
 }

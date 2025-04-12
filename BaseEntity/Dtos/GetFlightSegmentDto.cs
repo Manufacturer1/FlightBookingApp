@@ -4,5 +4,6 @@
     {
         public string FlightNumber { get; set; } = string.Empty;
         public int SegmentOrder { get; set; }
+
     }
 }

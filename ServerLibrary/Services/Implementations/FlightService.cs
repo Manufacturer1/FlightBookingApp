@@ -1,5 +1,4 @@
 ﻿using AutoMapper;
-using Azure.Core;
 using BaseEntity.Dtos;
 using BaseEntity.Entities;
 using BaseEntity.Responses;
@@ -24,32 +23,47 @@ namespace ServerLibrary.Services.Implementations
             _itineraryRepository = itineraryRepository;
         }
 
-        public async Task<IEnumerable<FlightCardResponseDto>> GetFlightCards(FlightCardRequestDto flightCardRequest)
+        public async Task<IEnumerable<ItineraryCardResponseDto>> GetFlightCards(FlightCardRequestDto flightCardRequest)
         {
             var allItineraries = await _itineraryRepository.GetAllAsync();
 
-            var searchedItineraries = allItineraries.Where(x => 
-            x.Origin.Equals(flightCardRequest.Origin,StringComparison.OrdinalIgnoreCase)
-            && x.Destination.Equals(flightCardRequest.Destination,StringComparison.OrdinalIgnoreCase));
-
-
-            var flights = searchedItineraries.SelectMany(x => x.Segments!).OrderBy(s => s.SegmentOrder).Select(f => f.Flight);
-
+            var searchedItineraries = allItineraries.Where(x =>
+                x.Origin.Equals(flightCardRequest.Origin, StringComparison.OrdinalIgnoreCase) &&
+                x.Destination.Equals(flightCardRequest.Destination, StringComparison.OrdinalIgnoreCase));
 
             string classTypeString = flightCardRequest.ClassType.ToString();
             string tripTypeString = flightCardRequest.TripType.ToString();
 
+            var result = new List<ItineraryCardResponseDto>();
 
-            var searchedFlights = flights
-                .Where(x => x!.ClassType!.Equals(classTypeString, StringComparison.OrdinalIgnoreCase))
-                .Where(x => x!.DepartureDate.Date == flightCardRequest.DepartureDate.Date)
-                .Where(x => !flightCardRequest.ReturnDate.HasValue ||
-                           (x!.ArrivalDate.Date == flightCardRequest.ReturnDate.Value.Date))
-                .Where(x => x!.TripType.Equals(tripTypeString, StringComparison.OrdinalIgnoreCase));
+            foreach (var itinerary in searchedItineraries)
+            {
+                var matchingFlights = itinerary.Segments!
+                    .OrderBy(s => s.SegmentOrder)
+                    .Where(s => s.Flight != null &&
+                                s.Flight.ClassType!.Equals(classTypeString, StringComparison.OrdinalIgnoreCase) &&
+                                s.Flight.DepartureDate.Date == flightCardRequest.DepartureDate.Date &&
+                                (!flightCardRequest.ReturnDate.HasValue ||
+                                 s.Flight.ArrivalDate.Date == flightCardRequest.ReturnDate.Value.Date) &&
+                                s.Flight.TripType.Equals(tripTypeString, StringComparison.OrdinalIgnoreCase))
+                    .Select(s => _mapper.Map<FlightCardResponseDto>(s.Flight))
+                    .ToList();
 
+                if (matchingFlights.Any())
+                {
+                    var mappedIinerary = _mapper.Map<GetItineraryDto>(itinerary);
+                    var card = new ItineraryCardResponseDto
+                    {
+                        Itinerary = mappedIinerary,
+                        Flights = matchingFlights
+                    };
+                    result.Add(card);
+                }
+            }
 
-            return _mapper.Map<IEnumerable<FlightCardResponseDto>>(searchedFlights);
+            return result;
         }
+
         public async Task<GeneralReponse> AddAsync(CreateFlightDto createFlight)
         {
             try
@@ -137,8 +151,6 @@ namespace ServerLibrary.Services.Implementations
                 if (updateFlight.AvailableSeats.HasValue)
                     originalFlight.AvailableSeats = updateFlight.AvailableSeats.Value;
 
-                if (updateFlight.BasePrice.HasValue)
-                    originalFlight.BasePrice = updateFlight.BasePrice.Value;
 
                 if (updateFlight.DepartureDate.HasValue)
                     originalFlight.DepartureDate = updateFlight.DepartureDate.Value;

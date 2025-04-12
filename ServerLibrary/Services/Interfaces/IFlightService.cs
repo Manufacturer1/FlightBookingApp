@@ -10,7 +10,7 @@ namespace ServerLibrary.Services.Interfaces
         Task<GeneralReponse> DeleteAsync(string flightNumber);
         Task<GetFlightDto?> GetByFlightNumberAsync(string flightNumber);
         Task<IEnumerable<GetFlightDto>> GetAllAsync();
-        Task<IEnumerable<FlightCardResponseDto>> GetFlightCards(FlightCardRequestDto flightCardRequest);
+        Task<IEnumerable<ItineraryCardResponseDto>> GetFlightCards(FlightCardRequestDto flightCardRequest);
 
     }
 }

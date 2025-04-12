@@ -21,10 +21,7 @@ namespace ServerLibrary.Data
         {
             base.OnModelCreating(modelBuilder);
 
-
-            modelBuilder.Entity<Flight>()
-            .Property(f => f.BasePrice)
-            .HasPrecision(10, 2);
+    
 
             modelBuilder.Entity<Flight>()
               .Property(f => f.DepartureDate)
@@ -36,6 +33,9 @@ namespace ServerLibrary.Data
                 .HasColumnType("date")
                 .IsRequired();
 
+            modelBuilder.Entity<Flight>()
+                  .Property(f => f.BasePrice)
+                  .HasPrecision(10, 2);
 
             modelBuilder.Entity<Flight>()
                 .HasOne(f => f.Plane)
@@ -93,6 +93,8 @@ namespace ServerLibrary.Data
                 .WithMany(i => i.Itineraries)
                 .HasForeignKey(i => i.AirlineId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+
 
         }
 

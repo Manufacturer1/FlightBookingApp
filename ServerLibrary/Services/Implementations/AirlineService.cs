@@ -64,7 +64,6 @@ namespace ServerLibrary.Services.Implementations
 
             return getAirline;  
         }
-
         public async Task<GeneralReponse> UpdateAsync(UpdateAirlineDto updateAirline)
         {
             var airline = _mapper.Map<Airline>(updateAirline);

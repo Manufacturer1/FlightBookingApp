@@ -20,9 +20,18 @@ namespace BaseEntity.Entities
         public int TotalSeats { get; set; } 
         public int AvailableSeats { get; set; }
         public decimal BasePrice { get; set; }
+        [Required]
+        [DataType(DataType.Date, ErrorMessage = "Invalid date format")]
         public DateTime DepartureDate { get; set; } = DateTime.Now;
+        [Required]
+        [DataType(DataType.Date, ErrorMessage = "Invalid date format")]
+        [ArrivalAfterDeparture]
         public DateTime ArrivalDate { get; set; } = DateTime.Now.AddDays(1);
+        [Required(ErrorMessage = "Departure time is required.")]
+        [RegularExpression(@"^([01]?[0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]$", ErrorMessage = "Time must be in HH:mm:ss format.")]
         public string DepartureTime { get; set; } = string.Empty;
+        [Required(ErrorMessage = "Arrival time is required.")]
+        [RegularExpression(@"^([01]?[0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]$", ErrorMessage = "Time must be in HH:mm:ss format.")]
         public string ArrivalTime { get; set; } = string.Empty;
         public int? PlaneId { get; set; }
         public Plane? Plane { get; set; } 

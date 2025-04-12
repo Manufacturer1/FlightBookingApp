@@ -86,10 +86,10 @@ namespace ServerLibrary.Repositories.Implementations
                 existingFlight.ArrivalDate = flight.ArrivalDate;
                 existingFlight.ArrivalTime = flight.ArrivalTime;
                 existingFlight.Origin = flight.Origin;
+                existingFlight.BasePrice = flight.BasePrice;
                 existingFlight.DepartureTime = flight.DepartureTime;
                 existingFlight.AvailableSeats = flight.AvailableSeats;
                 existingFlight.TotalSeats = flight.TotalSeats;
-                existingFlight.BasePrice = flight.BasePrice;
                 existingFlight.ClassType = flight.ClassType;
                 existingFlight.DepartureDate = flight.DepartureDate;
                 existingFlight.Destination = flight.Destination;

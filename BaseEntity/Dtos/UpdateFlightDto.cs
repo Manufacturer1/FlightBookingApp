@@ -10,6 +10,10 @@ namespace BaseEntity.Dtos
         public string FlightNumber { get; set; } = string.Empty;
         [Required]
         public int PlaneId { get; set; }
+        [Required]
+        public int? OriginAirportId { get; set; }
+        [Required]
+        public int? DestinationAirportId { get; set; }
         public string? ClassType { get; set; }
         public string? TripType { get; set; }
         public string? Origin { get; set; }
@@ -18,6 +22,7 @@ namespace BaseEntity.Dtos
         public int? TotalSeats { get; set; }
         public int? AvailableSeats { get; set; }
         public decimal? BasePrice { get; set; }
+
 
         [DataType(DataType.Date, ErrorMessage = "Invalid date format")]
         public DateTime? DepartureDate { get; set; } = null;

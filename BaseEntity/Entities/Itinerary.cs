@@ -8,6 +8,8 @@ namespace BaseEntity.Entities
         public int AirlineId { get; set; }
         public string Origin { get; set; } = string.Empty;
         public string Destination { get; set; } = string.Empty;
+        public string? StopTime {  get; set; } = string.Empty;
+
         [NotMapped]
         public decimal TotalPrice => Segments?
             .Where(segment => segment.Flight != null)
@@ -23,6 +25,8 @@ namespace BaseEntity.Entities
         public string ArrivalTime => Segments?.LastOrDefault()?.Flight?.ArrivalTime ?? string.Empty;
         [NotMapped]
         public string DurationTime => CalculateTotalDuration();
+        [NotMapped]
+        public bool HasStops => Segments?.Count() > 1;
         public ICollection<FlightSegment>? Segments { get; set; }
         public Airline? Airline { get; set; }
 

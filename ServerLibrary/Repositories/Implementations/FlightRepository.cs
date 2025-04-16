@@ -66,12 +66,16 @@ namespace ServerLibrary.Repositories.Implementations
               => await _db.Flights.AsNoTracking()
             .Include(x => x.Plane)
             .Include(x => x.Segments)
+            .Include(x => x.DestinationAirport)
+            .Include(x => x.OriginAirport)
             .ToListAsync();
 
         public async Task<Flight?> GetByFlightNumberAsync(string flightNumber)
             => await _db.Flights
             .Include(x => x.Plane)
             .Include(x => x.Segments)
+            .Include(x => x.DestinationAirport)
+            .Include(x => x.OriginAirport)
             .FirstOrDefaultAsync(x => x.FlightNumber == flightNumber);
 
         public async Task<GeneralReponse> UpdateAsync(Flight flight)

@@ -69,9 +69,9 @@ namespace FlightBooking.Controllers
         }
 
         [HttpPost("search")]
-        public async Task<IActionResult> SearchFlights([FromBody] FlightCardRequestDto request)
+        public async Task<IActionResult> SearchFlights([FromBody] FlightCardRequestDto request, bool withoutDate = false)
         {
-            var result = await _flightService.GetFlightCards(request);
+            var result = await _flightService.GetFlightCards(request,withoutDate);
 
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);

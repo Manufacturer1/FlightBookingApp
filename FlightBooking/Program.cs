@@ -162,6 +162,9 @@ builder.Services.AddScoped<IAirlineRepository, AirlineRepository>();
 builder.Services.AddScoped<IPlaneRepository, PlaneRepository>();
 builder.Services.AddScoped<IBaggageRepository,BaggageRepository>();
 builder.Services.AddScoped<IItineraryRepository, ItineraryRepository>();
+builder.Services.AddScoped<IAirportRepository,AirportRepository>();
+builder.Services.AddScoped<IAmenityRepository, AmenityRepository>();
+
 
 
 
@@ -173,6 +176,8 @@ builder.Services.AddScoped<IAirlineService,AirlineService>();
 builder.Services.AddScoped<IPlaneService,PlaneService>();
 builder.Services.AddScoped<IBaggageService,BaggageService>();
 builder.Services.AddScoped<IItineraryService, ItineraryService>();
+builder.Services.AddScoped<IAirportService,AirportService>();
+builder.Services.AddScoped<IAmenityService,AmenityService>();
 
 
 var app = builder.Build();

@@ -5,8 +5,11 @@ namespace BaseEntity.Dtos
     public class FlightCardResponseDto
     {
         public string FlightNumber { get; set; } = string.Empty;
-        public int PlaneId { get; set; } 
+        public int PlaneId { get; set; }
+        public int OriginAirportId { get; set; }
+        public int DestinationAirportId { get; set; }
         public string TripType { get; set; } = string.Empty;
+        public string ClassType {  get; set; } = string.Empty;  
         public string Origin { get; set; } = string.Empty;
         public string Destination { get; set; } = string.Empty;
         public string DestinationImageUrl { get; set; } = string.Empty;
@@ -16,5 +19,6 @@ namespace BaseEntity.Dtos
         public DateTime ArrivalDate { get; set; }
         public string DepartureTime { get; set; } = string.Empty;
         public string ArrivalTime { get; set; } = string.Empty;
+
     }
 }

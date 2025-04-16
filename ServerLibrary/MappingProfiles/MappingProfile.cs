@@ -14,6 +14,7 @@ namespace ServerLibrary.MappingProfiles
                 .ForMember(dest => dest.DestinationImageUrl, opt => opt.Ignore())
                 .ForMember(dest => dest.Plane, opt => opt.Ignore())
                 .ForMember(dest => dest.FlightNumber, opt => opt.Ignore());
+                
 
             CreateMap<UpdateAirlineDto, Airline>()
                 .ForAllMembers(opt => opt.Condition((src, srcMember) => srcMember != null));
@@ -59,7 +60,21 @@ namespace ServerLibrary.MappingProfiles
                 .ForMember(dest => dest.Itinerary, opt => opt.Ignore())
                 .ForMember(dest => dest.ItineraryId, opt => opt.Ignore());
 
-           
+            CreateMap<CreateAirportDto, Airport>()
+                .ForMember(dest => dest.DepartingFlights, opt => opt.Ignore())
+                .ForMember(dest => dest.ArrivalFlights, opt => opt.Ignore());
+
+            CreateMap<CreateAmenityDto, Amenity>()
+                .ForMember(dest => dest.FlightAmenities, opt => opt.Ignore());
+
+
+            CreateMap<FlightAmenityDto, FlightAmenity>()
+                .ForMember(dest => dest.Flight, opt => opt.Ignore())
+                .ForMember(dest => dest.Amenity, opt => opt.Ignore())
+                .ForMember(dest => dest.AmenityId, opt => opt.Ignore());
+
+
+                
 
 
             //From entity to dto
@@ -69,7 +84,10 @@ namespace ServerLibrary.MappingProfiles
 
             CreateMap<Flight, UpdateFlightDto>()
                 .ForMember(dest => dest.DestinationImage, opt => opt.Ignore());
+
+
             CreateMap<Airline, GetAirlineDto>();
+
             CreateMap<Airline, UpdateAirlineDto>()
                 .ForMember(dest => dest.AirlineImage, opt => opt.Ignore());
 
@@ -78,6 +96,12 @@ namespace ServerLibrary.MappingProfiles
 
             CreateMap<Itinerary, GetItineraryDto>();
             CreateMap<FlightSegment, GetFlightSegmentDto>();
+
+            CreateMap<Airport, GetAirportDto>();
+
+            CreateMap<Amenity, GetAmenityDto>();
+
+            CreateMap<FlightAmenity, FlightAmenityDto>();
 
             
         }

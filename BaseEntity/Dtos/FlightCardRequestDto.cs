@@ -16,9 +16,6 @@ namespace BaseEntity.Dtos
         public TripType TripType {  get; set; } = TripType.OneWay;
         [DataType(DataType.Date, ErrorMessage = "Invalid date format")]
         public DateTime DepartureDate {  get; set; } 
-
-        [ArrivalAfterDeparture]
-        [DataType(DataType.Date, ErrorMessage = "Invalid date format")]
         public DateTime? ReturnDate { get; set; }
     }
 }

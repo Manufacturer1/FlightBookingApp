@@ -1,9 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-using System.Text.Json.Serialization;
-
-namespace BaseEntity.Entities
-{    
+﻿namespace BaseEntity.Entities
+{
     public class Airline
     {
         public int Id { get; set; }

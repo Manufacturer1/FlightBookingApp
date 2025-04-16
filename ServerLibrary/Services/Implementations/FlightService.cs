@@ -23,7 +23,7 @@ namespace ServerLibrary.Services.Implementations
             _itineraryRepository = itineraryRepository;
         }
 
-        public async Task<IEnumerable<ItineraryCardResponseDto>> GetFlightCards(FlightCardRequestDto flightCardRequest)
+        public async Task<IEnumerable<ItineraryCardResponseDto>> GetFlightCards(FlightCardRequestDto flightCardRequest, bool withoutDate = false)
         {
             var allItineraries = await _itineraryRepository.GetAllAsync();
 
@@ -38,24 +38,42 @@ namespace ServerLibrary.Services.Implementations
 
             foreach (var itinerary in searchedItineraries)
             {
-                var matchingFlights = itinerary.Segments!
-                    .OrderBy(s => s.SegmentOrder)
-                    .Where(s => s.Flight != null &&
-                                s.Flight.ClassType!.Equals(classTypeString, StringComparison.OrdinalIgnoreCase) &&
-                                s.Flight.DepartureDate.Date == flightCardRequest.DepartureDate.Date &&
-                                (!flightCardRequest.ReturnDate.HasValue ||
-                                 s.Flight.ArrivalDate.Date == flightCardRequest.ReturnDate.Value.Date) &&
-                                s.Flight.TripType.Equals(tripTypeString, StringComparison.OrdinalIgnoreCase))
-                    .Select(s => _mapper.Map<FlightCardResponseDto>(s.Flight))
-                    .ToList();
+                IEnumerable<FlightCardResponseDto> matchingFlights;
+
+                if (withoutDate)
+                {
+                    
+                    matchingFlights = itinerary.Segments!
+                        .OrderBy(s => s.SegmentOrder)
+                        .Where(s => s.Flight != null &&
+                                    s.Flight.ClassType!.Equals(classTypeString, StringComparison.OrdinalIgnoreCase) &&
+                                    s.Flight.TripType.Equals(tripTypeString, StringComparison.OrdinalIgnoreCase))
+                        .Select(s => _mapper.Map<FlightCardResponseDto>(s.Flight))
+                        .ToList();
+                }
+                else
+                {
+                  
+                    matchingFlights = itinerary.Segments!
+                        .OrderBy(s => s.SegmentOrder)
+                        .Where(s => s.Flight != null &&
+                                    s.Flight.ClassType!.Equals(classTypeString, StringComparison.OrdinalIgnoreCase) &&
+                                    s.Flight.DepartureDate.Date == flightCardRequest.DepartureDate.Date &&
+                                    s.Flight.TripType.Equals(tripTypeString, StringComparison.OrdinalIgnoreCase))
+                        .Where(s => !flightCardRequest.ReturnDate.HasValue ||
+                                    s.Flight!.ArrivalDate.Date == flightCardRequest.ReturnDate.Value.Date)
+                        .Select(s => _mapper.Map<FlightCardResponseDto>(s.Flight))
+                        .ToList();
+                }
 
                 if (matchingFlights.Any())
                 {
                     var mappedIinerary = _mapper.Map<GetItineraryDto>(itinerary);
+
                     var card = new ItineraryCardResponseDto
                     {
                         Itinerary = mappedIinerary,
-                        Flights = matchingFlights
+                        Flights = matchingFlights.ToList(),
                     };
                     result.Add(card);
                 }
@@ -76,13 +94,8 @@ namespace ServerLibrary.Services.Implementations
                 var flight = _mapper.Map<Flight>(createFlight);
 
                 flight.DestinationImageUrl = createdImageName;
-
-                if (TimeSpan.TryParse(flight.DepartureTime, out var timeSpan))
-                    flight.TimeIcon = GetTime(timeSpan);
-                
-                else flight.TimeIcon = "morning";
-
-
+                flight.TimeIcon = "morning";
+              
 
                 return await _flightRepository.CreateAsync(flight);
             }
@@ -158,14 +171,7 @@ namespace ServerLibrary.Services.Implementations
                 if (updateFlight.ArrivalDate.HasValue)
                     originalFlight.ArrivalDate = updateFlight.ArrivalDate.Value;
 
-                if (updateFlight.DepartureTime != null)
-                {
-                    originalFlight.DepartureTime = updateFlight.DepartureTime;
-                    if (TimeSpan.TryParse(updateFlight.DepartureTime, out var timeSpan))
-                    {
-                        originalFlight.TimeIcon = GetTime(timeSpan);
-                    }
-                }
+
 
                 if (updateFlight.ArrivalTime != null)
                     originalFlight.ArrivalTime = updateFlight.ArrivalTime;
@@ -176,15 +182,6 @@ namespace ServerLibrary.Services.Implementations
             {
                 return new GeneralReponse(false, $"Exception occurred: {ex.Message}");
             }
-        }
-
-        private string GetTime(TimeSpan timeSpan)
-        {
-            if(timeSpan >= new TimeSpan(6,0,0) && timeSpan < new TimeSpan(18, 0, 0))
-            {
-                return "morning";
-            }
-            return "night";
         }
         private async Task<string> UploadImage(IFormFile imageName)
         {

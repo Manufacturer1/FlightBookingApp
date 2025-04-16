@@ -1,4 +1,6 @@
-﻿namespace BaseEntity.Dtos
+﻿using System.Text.Json.Serialization;
+
+namespace BaseEntity.Dtos
 {
     public class GetAirlineDto
     {
@@ -7,7 +9,7 @@
         public string Name { get; set; } = string.Empty;
         public string AirlineImageUrl { get; set; } = string.Empty;
         public string AirlineBgColor { get; set; } = "#0D78C9FF";
-        public IEnumerable<GetItineraryDto>? Itineraries { get; set; }
+ 
        
 
     }

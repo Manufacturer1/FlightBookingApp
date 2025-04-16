@@ -22,7 +22,6 @@ namespace ServerLibrary.BackgroundServices
         {
             _logger.LogInformation("Daily Flight Date Updater Service is starting.");
 
-
             await Task.Delay(_initialDelay, stoppingToken);
 
             while (!stoppingToken.IsCancellationRequested)
@@ -30,6 +29,8 @@ namespace ServerLibrary.BackgroundServices
                 try
                 {
                     var now = DateTime.Now;
+                    var today = now.Date;
+                    var tomorrow = today.AddDays(1);
                     _logger.LogInformation($"Starting daily flight date update at {now}");
 
                     using (var scope = _serviceProvider.CreateScope())
@@ -37,37 +38,53 @@ namespace ServerLibrary.BackgroundServices
                         var flightRepository = scope.ServiceProvider
                             .GetRequiredService<IFlightRepository>();
 
-                    
-                        var flights = await flightRepository.GetAllAsync();
+                        var flights = (await flightRepository.GetAllAsync()).ToList();
                         int updates = 0;
+                        int tomorrowUpdates = 0;
 
                         foreach (var flight in flights)
                         {
-                            if(flight.DepartureDate.Date < now.Date)
+                            bool isSpecialFlight = flight.FlightNumber == "16df11" || flight.FlightNumber == "292425";
+
+                            if (isSpecialFlight)
                             {
-                                flight.DepartureDate = now;
-                                flight.ArrivalDate = now.AddDays(1);
-
-                                await flightRepository.UpdateAsync(flight);
-                                updates++;
-
-                            }   
+                                
+                                if (flight.DepartureDate.Date != tomorrow || flight.ArrivalDate.Date != tomorrow)
+                                {
+                                    flight.DepartureDate = tomorrow;
+                                    flight.ArrivalDate = tomorrow;
+                                    await flightRepository.UpdateAsync(flight);
+                                    tomorrowUpdates++;
+                                    updates++;
+                                }
+                            }
+                            else
+                            {
+                               
+                                if (flight.DepartureDate.Date != today || flight.ArrivalDate.Date != today)
+                                {
+                                    flight.DepartureDate = today;
+                                    flight.ArrivalDate = today;
+                                    await flightRepository.UpdateAsync(flight);
+                                    updates++;
+                                }
+                            }
                         }
 
                         if (updates > 0)
                         {
-                            _logger.LogInformation($"Updated {flights.Count()} flights at {now}");
-
+                            _logger.LogInformation($"Updated {updates} flights ({tomorrowUpdates} to tomorrow) at {now}");
                         }
                         else
-                            _logger.LogInformation($"No update required");
+                        {
+                            _logger.LogInformation("No update required");
+                        }
                     }
                 }
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "Error occurred during daily flight date update");
                 }
-
 
                 await Task.Delay(_updateInterval, stoppingToken);
             }

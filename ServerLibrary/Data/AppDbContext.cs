@@ -15,6 +15,9 @@ namespace ServerLibrary.Data
         public DbSet<Airline> Airlines { get; set; }
         public DbSet<Plane> Planes { get; set; }
         public DbSet<BaggagePolicy> Baggages { get; set; }
+        public DbSet<Airport> Airports { get; set; }
+        public DbSet<Amenity> Amenities { get; set; }
+        public DbSet<FlightAmenity> FlightAmenities { get; set; }
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -42,6 +45,18 @@ namespace ServerLibrary.Data
                 .WithMany(P => P.Flights)
                 .HasForeignKey(f => f.PlaneId)
                 .OnDelete(DeleteBehavior.SetNull);
+
+            modelBuilder.Entity<Flight>()
+                .HasOne(f => f.OriginAirport)
+                .WithMany(a => a.DepartingFlights)
+                .HasForeignKey(f => f.OriginAirportId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            modelBuilder.Entity<Flight>()
+                .HasOne(f => f.DestinationAirport)
+                .WithMany(a => a.ArrivalFlights)
+                .HasForeignKey(f => f.DestinationAirportId)
+                .OnDelete(DeleteBehavior.NoAction);
 
             modelBuilder.Entity<Airline>()
                 .HasOne(a => a.BaggagePolicy)
@@ -93,6 +108,18 @@ namespace ServerLibrary.Data
                 .WithMany(i => i.Itineraries)
                 .HasForeignKey(i => i.AirlineId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+
+            modelBuilder.Entity<FlightAmenity>()
+                .HasOne(fa => fa.Flight)
+                .WithMany(f => f.FlightAmenities)
+                .HasForeignKey(fa => fa.FlightNumber);
+
+
+            modelBuilder.Entity<FlightAmenity>()
+                .HasOne(fa => fa.Amenity)
+                .WithMany(a => a.FlightAmenities)
+                .HasForeignKey(fa => fa.AmenityId);
 
 
 

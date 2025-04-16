@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using ServerLibrary.Data;
 
@@ -11,9 +12,11 @@ using ServerLibrary.Data;
 namespace ServerLibrary.Data.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250416110121_aiportEntityAdded")]
+    partial class aiportEntityAdded
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -70,32 +73,7 @@ namespace ServerLibrary.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Airports");
-                });
-
-            modelBuilder.Entity("BaseEntity.Entities.Amenity", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("AmenityIconUrl")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Amenities");
+                    b.ToTable("Airport");
                 });
 
             modelBuilder.Entity("BaseEntity.Entities.ApplicationUser", b =>
@@ -276,29 +254,6 @@ namespace ServerLibrary.Data.Migrations
                     b.HasIndex("PlaneId");
 
                     b.ToTable("Flights");
-                });
-
-            modelBuilder.Entity("BaseEntity.Entities.FlightAmenity", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("AmenityId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("FlightNumber")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AmenityId");
-
-                    b.HasIndex("FlightNumber");
-
-                    b.ToTable("FlightAmenities");
                 });
 
             modelBuilder.Entity("BaseEntity.Entities.FlightSegment", b =>
@@ -553,23 +508,6 @@ namespace ServerLibrary.Data.Migrations
                     b.Navigation("Plane");
                 });
 
-            modelBuilder.Entity("BaseEntity.Entities.FlightAmenity", b =>
-                {
-                    b.HasOne("BaseEntity.Entities.Amenity", "Amenity")
-                        .WithMany("FlightAmenities")
-                        .HasForeignKey("AmenityId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("BaseEntity.Entities.Flight", "Flight")
-                        .WithMany("FlightAmenities")
-                        .HasForeignKey("FlightNumber");
-
-                    b.Navigation("Amenity");
-
-                    b.Navigation("Flight");
-                });
-
             modelBuilder.Entity("BaseEntity.Entities.FlightSegment", b =>
                 {
                     b.HasOne("BaseEntity.Entities.Flight", "Flight")
@@ -663,11 +601,6 @@ namespace ServerLibrary.Data.Migrations
                     b.Navigation("DepartingFlights");
                 });
 
-            modelBuilder.Entity("BaseEntity.Entities.Amenity", b =>
-                {
-                    b.Navigation("FlightAmenities");
-                });
-
             modelBuilder.Entity("BaseEntity.Entities.BaggagePolicy", b =>
                 {
                     b.Navigation("Airlines");
@@ -675,8 +608,6 @@ namespace ServerLibrary.Data.Migrations
 
             modelBuilder.Entity("BaseEntity.Entities.Flight", b =>
                 {
-                    b.Navigation("FlightAmenities");
-
                     b.Navigation("Segments");
                 });
 

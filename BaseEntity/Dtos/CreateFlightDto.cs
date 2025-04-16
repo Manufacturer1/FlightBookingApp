@@ -11,6 +11,10 @@ namespace BaseEntity.Dtos
 
         [Required]
         public int PlaneId { get; set; }
+        [Required]
+        public int? OriginAirportId { get; set; }
+        [Required]
+        public int? DestinationAirportId { get; set; }
 
         [Required]
         public string TripType { get; set; } = string.Empty;
@@ -38,11 +42,11 @@ namespace BaseEntity.Dtos
         public DateTime ArrivalDate { get; set; } = DateTime.Now.AddDays(1);
 
         [Required(ErrorMessage = "Departure time is required.")]
-        [RegularExpression(@"^([01]?[0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]$", ErrorMessage = "Time must be in HH:mm:ss format.")]
+        [RegularExpression(@"^([01]?[0-9]|2[0-3]):[0-5][0-9]$", ErrorMessage = "Time must be in HH:mm format.")]
         public string DepartureTime { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "Arrival time is required.")]
-        [RegularExpression(@"^([01]?[0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]$", ErrorMessage = "Time must be in HH:mm:ss format.")]
+        [RegularExpression(@"^([01]?[0-9]|2[0-3]):[0-5][0-9]]$", ErrorMessage = "Time must be in HH:mm format.")]
         public string ArrivalTime { get; set; } = string.Empty;
     }
 }

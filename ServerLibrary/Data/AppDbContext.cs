@@ -19,6 +19,8 @@ namespace ServerLibrary.Data
         public DbSet<Amenity> Amenities { get; set; }
         public DbSet<FlightAmenity> FlightAmenities { get; set; }
 
+        public DbSet<Discount> Discounts { get; set; }
+
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -121,6 +123,13 @@ namespace ServerLibrary.Data
                 .WithMany(a => a.FlightAmenities)
                 .HasForeignKey(fa => fa.AmenityId);
 
+
+            modelBuilder.Entity<Discount>(entity =>
+            {
+                entity.Property(p => p.Percentage)
+                  .HasPrecision(5, 2);
+            });
+                
 
 
         }

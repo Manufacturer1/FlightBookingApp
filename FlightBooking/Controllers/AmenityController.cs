@@ -29,6 +29,19 @@ namespace FlightBooking.Controllers
 
             return Ok(response.Message);
         }
+        [HttpPost("add-amenity-flights/{amenityId}")]
+        public async Task<IActionResult> AddFlightsToAmenity(IEnumerable<FlightAmenityDto> request,int amenityId)
+        {
+            if (request == null)
+                return BadRequest("Flight amenities cannot be null");
+
+            var response = await _amenityService.AddFlightsToAmenities(request,amenityId);
+            if (!response.Flag)
+                return BadRequest(response.Message);
+
+            return Ok(response.Message);
+        }
+
         [HttpPost("upload-icon")]
         public async Task<IActionResult> UploadAmenityIcon([FromForm] AmenityImageUploaderDto file)
         {
@@ -43,6 +56,25 @@ namespace FlightBooking.Controllers
             var imageName = await _fileService.SaveFileAsync(file!.AmenityIcon, allowedFileExtensions);
 
             return Ok(new { iconUrl = imageName });
+        }
+
+        [HttpPut("update-amenity/{amenityId}")]
+        public async Task<IActionResult> UpdateAmenityAsync(UpdateAmenityDto request,int amenityId)
+        {
+            var response = await _amenityService.UpdateAmenityAsync(request,amenityId);
+
+            if (!response.Flag) return BadRequest(response.Message);
+
+            return Ok(response.Message);
+        }
+        [HttpPut("update-flight-amenities/{amenityId}")]
+        public async Task<IActionResult> UpdateFlightAmenitiesAsync(IEnumerable<FlightAmenityDto> request,int amenityId)
+        {
+            var response = await _amenityService.UpdateFlightAmenitiesAsync(request, amenityId);
+
+            if (!response.Flag) return BadRequest(response.Message);
+
+            return Ok(response.Message);
         }
 
         [HttpDelete("delete/{id}")]

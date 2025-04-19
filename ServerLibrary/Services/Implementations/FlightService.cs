@@ -3,6 +3,7 @@ using BaseEntity.Dtos;
 using BaseEntity.Entities;
 using BaseEntity.Responses;
 using Microsoft.AspNetCore.Http;
+using ServerLibrary.Decorator;
 using ServerLibrary.Repositories.Interfaces;
 using ServerLibrary.Services.Interfaces;
 
@@ -14,13 +15,19 @@ namespace ServerLibrary.Services.Implementations
         private readonly IFileService _fileService;
         private readonly IMapper _mapper;
         private readonly IItineraryRepository _itineraryRepository;
+        private readonly IDiscountRepository _discountRepository;
 
-        public FlightService(IFlightRepository flightRepository, IFileService fileService,IMapper mapper,IItineraryRepository itineraryRepository)
+        public FlightService(IFlightRepository flightRepository, 
+            IFileService fileService,IMapper mapper,
+            IItineraryRepository itineraryRepository,
+            IDiscountRepository discountRepository)
         {
             _flightRepository = flightRepository;
             _fileService = fileService;
             _mapper = mapper;
             _itineraryRepository = itineraryRepository;
+            _discountRepository = discountRepository;
+            
         }
 
         public async Task<IEnumerable<ItineraryCardResponseDto>> GetFlightCards(FlightCardRequestDto flightCardRequest, bool withoutDate = false)
@@ -39,6 +46,7 @@ namespace ServerLibrary.Services.Implementations
             foreach (var itinerary in searchedItineraries)
             {
                 IEnumerable<FlightCardResponseDto> matchingFlights;
+
 
                 if (withoutDate)
                 {
@@ -69,8 +77,15 @@ namespace ServerLibrary.Services.Implementations
                 if (matchingFlights.Any())
                 {
                     var mappedIinerary = _mapper.Map<GetItineraryDto>(itinerary);
+                   
+                    foreach(var flight in matchingFlights)
+                    {
+                        flight.FinalPrice = await CalculateFlightPrice(flight.FlightNumber);
+                    }
 
-                    var card = new ItineraryCardResponseDto
+                    mappedIinerary.CalculatedPrice = matchingFlights.Sum((flight) => flight.FinalPrice);
+
+                   var card = new ItineraryCardResponseDto
                     {
                         Itinerary = mappedIinerary,
                         Flights = matchingFlights.ToList(),
@@ -113,18 +128,29 @@ namespace ServerLibrary.Services.Implementations
 
         public async Task<IEnumerable<GetFlightDto>> GetAllAsync()
         {
-           var flights = await _flightRepository.GetAllAsync();
-            
-            return _mapper.Map<IEnumerable<GetFlightDto>>(flights);
+            var flights = await _flightRepository.GetAllAsync();
+            var mappedFlights = _mapper.Map<IEnumerable<GetFlightDto>>(flights);
+
+            foreach (var flight in mappedFlights)
+            {
+                var calculatedPrice = await CalculateFlightPrice(flight.FlightNumber);
+                flight.FinalPrice = calculatedPrice;
+
+            }
+
+            return mappedFlights;
         }
 
         public async Task<GetFlightDto?> GetByFlightNumberAsync(string flightNumber)
         {
             var flight = await _flightRepository.GetByFlightNumberAsync(flightNumber);
+            var mappedFlight = _mapper.Map<GetFlightDto>(flight);
 
             if (flight == null) return null;
 
-            return _mapper.Map<GetFlightDto>(flight);
+            mappedFlight.FinalPrice = await CalculateFlightPrice(flight.FlightNumber);
+
+            return mappedFlight;
 
         }
 
@@ -189,6 +215,25 @@ namespace ServerLibrary.Services.Implementations
             string createdImageName = await _fileService.SaveFileAsync(imageName, allowedFileExtensions);
 
             return createdImageName;
+        }
+
+        private async Task<decimal> CalculateFlightPrice(string flightNumber)
+        {
+            var flight = await _flightRepository.GetByFlightNumberAsync(flightNumber);
+
+
+            IPriceCalculator priceCalculator = new BasePriceCalculator(flight!);
+            var discounts = await _discountRepository.GetAllAsync();
+
+            foreach(var discount in discounts)
+            {
+                priceCalculator = new DiscountPriceCalculator(priceCalculator, discount);
+            }
+
+            decimal finalPrice = priceCalculator.CalculatePrice();
+
+
+            return finalPrice;
         }
 
     }

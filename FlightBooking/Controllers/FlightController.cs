@@ -49,7 +49,7 @@ namespace FlightBooking.Controllers
         }
 
 
-        [HttpGet("flight/{flightNumber}")]
+        [HttpGet("get/{flightNumber}")]
         public async Task<IActionResult> GetFlight(string flightNumber)
         {
             var result = await _flightService.GetByFlightNumberAsync(flightNumber);

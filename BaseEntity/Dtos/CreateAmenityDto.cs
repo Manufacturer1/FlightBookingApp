@@ -12,8 +12,5 @@ namespace BaseEntity.Dtos
         [Required]
         public string AmenityIconUrl { get; set; } = string.Empty;
 
-        [Required]
-        public ICollection<FlightAmenityDto>? FlightAmenities { get; set; }
-
     }
 }

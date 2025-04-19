@@ -73,9 +73,11 @@ namespace ServerLibrary.MappingProfiles
                 .ForMember(dest => dest.Amenity, opt => opt.Ignore())
                 .ForMember(dest => dest.AmenityId, opt => opt.Ignore());
 
+            CreateMap<UpdateAmenityDto, Amenity>();
 
+            CreateMap<CreateDiscountDto, Discount>();
+            CreateMap<UpdateDiscountDto, Discount>();
                 
-
 
             //From entity to dto
             CreateMap<Flight, GetFlightDto>();
@@ -103,7 +105,7 @@ namespace ServerLibrary.MappingProfiles
 
             CreateMap<FlightAmenity, FlightAmenityDto>();
 
-            
+            CreateMap<Discount, GetDiscountDto>();
         }
     }
 }

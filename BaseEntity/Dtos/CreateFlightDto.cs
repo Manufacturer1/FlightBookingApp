@@ -42,11 +42,11 @@ namespace BaseEntity.Dtos
         public DateTime ArrivalDate { get; set; } = DateTime.Now.AddDays(1);
 
         [Required(ErrorMessage = "Departure time is required.")]
-        [RegularExpression(@"^([01]?[0-9]|2[0-3]):[0-5][0-9]$", ErrorMessage = "Time must be in HH:mm format.")]
+        [RegularExpression(@"^([01]?[0-9]|2[0-3]):[0-5][0-9]$", ErrorMessage = "Time must be in HH:mm format (00:00 to 23:59).")]
         public string DepartureTime { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "Arrival time is required.")]
-        [RegularExpression(@"^([01]?[0-9]|2[0-3]):[0-5][0-9]]$", ErrorMessage = "Time must be in HH:mm format.")]
+        [RegularExpression(@"^([01]?[0-9]|2[0-3]):[0-5][0-9]$", ErrorMessage = "Time must be in HH:mm format (00:00 to 23:59).")]
         public string ArrivalTime { get; set; } = string.Empty;
     }
 }

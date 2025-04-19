@@ -14,6 +14,7 @@ namespace BaseEntity.Dtos
         public string Destination { get; set; } = string.Empty;
         public string DestinationImageUrl { get; set; } = string.Empty;
         public decimal BasePrice { get; set; }
+        public decimal FinalPrice { get; set; } = decimal.Zero;
         public string TimeIcon { get; set; } = string.Empty;
         public int TotalSeats { get; set; }
         public int AvailableSeats { get; set; }

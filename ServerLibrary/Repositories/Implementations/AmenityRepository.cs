@@ -60,16 +60,42 @@ namespace ServerLibrary.Repositories.Implementations
         public async Task<IEnumerable<Amenity>> GetAllAsync()
              => await db.Amenities.AsNoTracking()
             .Include(x => x.FlightAmenities!)
-            .ThenInclude(x => x.Flight)
             .ToListAsync();    
 
         public async Task<Amenity?> GetByIdAsync(int id)
              => await db.Amenities
             .Include(x => x.FlightAmenities!)
-            .ThenInclude(x => x.Flight)
             .FirstOrDefaultAsync(x => x.Id == id);
 
+        public async Task<GeneralReponse> UpdateAsync(Amenity amenity)
+        {
+            var entity = await db.Amenities.FirstOrDefaultAsync(x => x.Id == amenity.Id);
+            if (entity == null)
+                return new GeneralReponse(false, "The was not found");
 
+            try
+            {
+                if (!string.IsNullOrEmpty(amenity.Name))
+                    entity.Name = amenity.Name;
 
+                if(!string.IsNullOrEmpty(amenity.Description))
+                    entity.Description = amenity.Description;
+
+                if(!string.IsNullOrEmpty(amenity.AmenityIconUrl))
+                    entity.AmenityIconUrl = amenity.AmenityIconUrl;
+
+                await db.SaveChangesAsync();
+            }
+            catch (DbException dbEx)
+            {
+                return new GeneralReponse(false, $"Database error: {dbEx.Message}");
+            }
+            catch (Exception ex)
+            {
+                return new GeneralReponse(false, $"Something went wrong {ex.Message}");
+            }
+            return new GeneralReponse(true, $"Amenity {amenity.Id} was updated successfuly");
+
+        }
     }
 }

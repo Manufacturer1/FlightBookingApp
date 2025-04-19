@@ -12,12 +12,14 @@ namespace ServerLibrary.Services.Implementations
         private readonly IAmenityRepository _amenityRepository;
         private readonly IMapper _mapper;
         private readonly IFlightRepository _flightRepository;
+        private readonly IFlightAmenityRepository _flightAmenityRepository;
 
-        public AmenityService(IAmenityRepository amenityRepository,IMapper mapper,IFlightRepository flightRepository)
+        public AmenityService(IAmenityRepository amenityRepository,IMapper mapper,IFlightRepository flightRepository,IFlightAmenityRepository flightAmenityRepository)
         {
             _amenityRepository = amenityRepository;
             _mapper = mapper;
             _flightRepository = flightRepository;
+            _flightAmenityRepository = flightAmenityRepository;
         }
 
         public async Task<GeneralReponse> AddAsync(CreateAmenityDto createAmenity)
@@ -25,28 +27,9 @@ namespace ServerLibrary.Services.Implementations
             if (createAmenity == null)
                 return new GeneralReponse(false, "Amenity data is required");
 
-            if (createAmenity.FlightAmenities == null || !createAmenity.FlightAmenities.Any())
-                return new GeneralReponse(false, "At least one flight amenity is required");
-
-            var flights = new List<Flight>();
-            foreach (var amenity in createAmenity.FlightAmenities)
-            {
-                var flight = await _flightRepository.GetByFlightNumberAsync(amenity.FlightNumber);
-                if (flight == null)
-                    return new GeneralReponse(false, $"Flight {amenity.FlightNumber} was not found.");
-                flights.Add(flight);
-            }
-
-            var amenityEntity = _mapper.Map<Amenity>(createAmenity);
-
-            amenityEntity.FlightAmenities = flights.Select(flight => new FlightAmenity
-            {
-                FlightNumber = flight.FlightNumber
-            }).ToList();
-
             try
             {
-               
+                var amenityEntity = _mapper.Map<Amenity>(createAmenity);
                 return await _amenityRepository.CreateAsync(amenityEntity);
             }
             catch (Exception ex)
@@ -55,6 +38,41 @@ namespace ServerLibrary.Services.Implementations
             }
         }
 
+
+        public async Task<GeneralReponse> AddFlightsToAmenities(IEnumerable<FlightAmenityDto>flightAmenitiesDto,int amenityId)
+        {
+            if (flightAmenitiesDto == null)
+                return new GeneralReponse(false, "Flight Amenity Dto was null");
+
+            var amenity = await _amenityRepository.GetByIdAsync(amenityId);
+            if (amenity == null)
+                return new GeneralReponse(false, "Amenity was not found");
+
+
+
+            foreach(var flight in flightAmenitiesDto)
+            {
+                var fl = await _flightRepository.GetByFlightNumberAsync(flight.FlightNumber);
+
+                if (fl == null)
+                    return new GeneralReponse(false, "Flight was not found");
+
+                var flightAmenity = _mapper.Map<FlightAmenity>(flight);
+                
+
+                flightAmenity.AmenityId = amenityId;
+
+                var response = await _flightAmenityRepository.CreateAsync(flightAmenity);
+
+                if (!response.Flag)
+                    return new GeneralReponse(false, response.Message);
+                
+
+            }
+            await _flightAmenityRepository.SaveChangesAsync();
+            return new GeneralReponse(true,"Amenities successfuly associated with flights");
+
+        }
 
         public async Task<GeneralReponse> DeleteAsync(int id)
         {
@@ -75,5 +93,44 @@ namespace ServerLibrary.Services.Implementations
             return _mapper.Map<GetAmenityDto>(amenity);
         }
 
+        public async Task<GeneralReponse> UpdateAmenityAsync(UpdateAmenityDto updateAmenity, int amenityId)
+        {
+            var amenity = _mapper.Map<Amenity>(updateAmenity);
+
+            amenity.Id = amenityId;
+
+            return await _amenityRepository.UpdateAsync(amenity);
+        }
+
+        public async Task<GeneralReponse> UpdateFlightAmenitiesAsync(IEnumerable<FlightAmenityDto> updateAmenity, int amenityId)
+        {
+            var amenity = await _amenityRepository.GetByIdAsync(amenityId);
+
+            if(amenity == null)
+                return new GeneralReponse(false,"The amenity was not found");
+
+            foreach(var  flight in updateAmenity)
+            {
+                var flightAmenity = _mapper.Map<FlightAmenity>(flight);
+
+                flightAmenity.AmenityId = amenityId;
+
+                var fl = await _flightRepository.GetByFlightNumberAsync(flight.FlightNumber);
+
+                if (fl == null)
+                    return new GeneralReponse(false, "Flight was not found");
+
+                var response = await _flightAmenityRepository.UpdateAsync(flightAmenity);
+
+                if(!response.Flag)
+                    return new GeneralReponse(false,response.Message);
+
+            }
+
+
+            await _flightAmenityRepository.SaveChangesAsync();
+
+            return new GeneralReponse(true, "Flight amenities updated successfully");
+        }
     }
 }

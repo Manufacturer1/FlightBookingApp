@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using ServerLibrary.Adapter;
 using ServerLibrary.BackgroundServices;
 using ServerLibrary.Data;
 using ServerLibrary.MappingProfiles;
@@ -15,6 +16,7 @@ using ServerLibrary.Repositories.Implementations;
 using ServerLibrary.Repositories.Interfaces;
 using ServerLibrary.Services.Implementations;
 using ServerLibrary.Services.Interfaces;
+using Stripe;
 using System.Net.NetworkInformation;
 using System.Text;
 
@@ -58,6 +60,11 @@ builder.Services.AddSwaggerGen(options =>
     });
 
 });
+//Stripe payment configuration
+var stripeConf = new StripePaymentConf();
+builder.Configuration.GetSection("STRIPE_CONFIGURATION").Bind(stripeConf);
+builder.Services.AddSingleton(stripeConf);
+StripeConfiguration.ApiKey = stripeConf.SecretKey;
 
 
 
@@ -108,30 +115,7 @@ builder.Services.AddAuthentication(options =>
         ValidateLifetime = true,
     };
 
- 
-    options.Events = new JwtBearerEvents
-    {
-        OnMessageReceived = context =>
-        {
-            Console.WriteLine($"Received token: {context.Token}");
-            return Task.CompletedTask;
-        },
-        OnAuthenticationFailed = context =>
-        {
-            Console.WriteLine($"Authentication failed: {context.Exception}");
-            return Task.CompletedTask;
-        },
-        OnTokenValidated = context =>
-        {
-            Console.WriteLine("Token successfully validated");
-            return Task.CompletedTask;
-        },
-        OnChallenge = context =>
-        {
-            Console.WriteLine($"Challenge: {context.Error}, {context.ErrorDescription}");
-            return Task.CompletedTask;
-        }
-    };
+
 });
 builder.Services.AddHttpContextAccessor();
 
@@ -150,9 +134,14 @@ builder.Services.AddCors(options =>
         });
 });
 
+//Adapter register
+builder.Services.AddScoped<IPaymentGateway,StripePaymentAdapter>();
+
+
+
+
 // Background service
 builder.Services.AddHostedService<FlightDateUpdaterService>();
-
 
 
 // Repositories register
@@ -171,7 +160,7 @@ builder.Services.AddScoped<IDiscountRepository, DiscountRepository>();
 
 //Services register
 builder.Services.AddScoped<IAuthService, AuthService>();
-builder.Services.AddScoped<IFileService, FileService>();
+builder.Services.AddScoped<IFileService, ServerLibrary.Services.Implementations.FileService>();
 builder.Services.AddScoped<IFlightService, FlightService>();
 builder.Services.AddScoped<IAirlineService,AirlineService>();
 builder.Services.AddScoped<IPlaneService,PlaneService>();
@@ -179,7 +168,8 @@ builder.Services.AddScoped<IBaggageService,BaggageService>();
 builder.Services.AddScoped<IItineraryService, ItineraryService>();
 builder.Services.AddScoped<IAirportService,AirportService>();
 builder.Services.AddScoped<IAmenityService,AmenityService>();
-builder.Services.AddScoped<IDiscountService,DiscountService>();
+builder.Services.AddScoped<IDiscountService,ServerLibrary.Services.Implementations.DiscountService>();
+builder.Services.AddScoped<IPaymentService,StripePaymentService>();
 
 
 var app = builder.Build();

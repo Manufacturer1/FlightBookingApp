@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using ServerLibrary.Data;
 
@@ -11,9 +12,11 @@ using ServerLibrary.Data;
 namespace ServerLibrary.Data.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250423161656_bookingEntityAdded")]
+    partial class bookingEntityAdded
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -217,8 +220,9 @@ namespace ServerLibrary.Data.Migrations
                     b.Property<DateTime>("BookingDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("ItineraryId")
-                        .HasColumnType("int");
+                    b.Property<string>("FlightNumber")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<int>("PassengerId")
                         .HasColumnType("int");
@@ -233,7 +237,7 @@ namespace ServerLibrary.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ItineraryId");
+                    b.HasIndex("FlightNumber");
 
                     b.HasIndex("PassengerId");
 
@@ -691,9 +695,9 @@ namespace ServerLibrary.Data.Migrations
 
             modelBuilder.Entity("BaseEntity.Entities.Booking", b =>
                 {
-                    b.HasOne("BaseEntity.Entities.Itinerary", "Itinerary")
+                    b.HasOne("BaseEntity.Entities.Flight", "Flight")
                         .WithMany("Bookings")
-                        .HasForeignKey("ItineraryId")
+                        .HasForeignKey("FlightNumber")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -703,7 +707,7 @@ namespace ServerLibrary.Data.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Itinerary");
+                    b.Navigation("Flight");
 
                     b.Navigation("Passenger");
                 });
@@ -873,6 +877,8 @@ namespace ServerLibrary.Data.Migrations
 
             modelBuilder.Entity("BaseEntity.Entities.Flight", b =>
                 {
+                    b.Navigation("Bookings");
+
                     b.Navigation("FlightAmenities");
 
                     b.Navigation("Segments");
@@ -880,8 +886,6 @@ namespace ServerLibrary.Data.Migrations
 
             modelBuilder.Entity("BaseEntity.Entities.Itinerary", b =>
                 {
-                    b.Navigation("Bookings");
-
                     b.Navigation("Segments");
                 });
 

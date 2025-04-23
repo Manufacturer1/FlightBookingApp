@@ -78,6 +78,10 @@ namespace ServerLibrary.MappingProfiles
             CreateMap<CreateDiscountDto, Discount>();
             CreateMap<UpdateDiscountDto, Discount>();
                 
+            CreateMap<CreateContactDetailsDto, ContactDetails>();
+            CreateMap<CreatePassportDto, PassportIdentity>();
+            CreateMap<CreatePassengerDto, Passenger>();
+            CreateMap<CreateBookingDto, Booking>(); 
 
             //From entity to dto
             CreateMap<Flight, GetFlightDto>();
@@ -106,6 +110,11 @@ namespace ServerLibrary.MappingProfiles
             CreateMap<FlightAmenity, FlightAmenityDto>();
 
             CreateMap<Discount, GetDiscountDto>();
+
+            CreateMap<ContactDetails, GetContactDetailsDto>();
+            CreateMap<PassportIdentity,GetPassportDto>();
+            CreateMap<Passenger, GetPassengerDto>();
+            CreateMap<Booking, GetBookingDto>();
         }
     }
 }

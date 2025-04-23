@@ -1,7 +1,6 @@
 ﻿using BaseEntity.PaymentDtos;
 using Microsoft.AspNetCore.Mvc;
 using ServerLibrary.Adapter;
-using Stripe;
 
 namespace FlightBooking.Controllers
 {

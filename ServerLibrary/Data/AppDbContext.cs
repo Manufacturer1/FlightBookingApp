@@ -8,7 +8,6 @@ namespace ServerLibrary.Data
     {
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
-
         public DbSet<Flight> Flights { get; set; }
         public DbSet<Itinerary> Itineraries { get; set; }
         public DbSet<FlightSegment> Segments { get; set; }
@@ -21,6 +20,10 @@ namespace ServerLibrary.Data
 
         public DbSet<Discount> Discounts { get; set; }
 
+        public DbSet<Passenger> Passengers { get; set; }
+        public DbSet<Booking> Bookings { get; set; }
+        public DbSet<ContactDetails> ContactDetails { get; set; }
+        public DbSet<PassportIdentity> PassportIdentities { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -89,7 +92,6 @@ namespace ServerLibrary.Data
                 entity.Property(p => p.ExtraCabinBagFee)
                 .HasPrecision(10, 2)
                 .IsRequired();
-                
 
             });
 
@@ -129,8 +131,30 @@ namespace ServerLibrary.Data
                 entity.Property(p => p.Percentage)
                   .HasPrecision(5, 2);
             });
-                
 
+            modelBuilder.Entity<Passenger>()
+                .HasOne(p => p.PassportIdentity)
+                .WithOne()
+                .HasForeignKey<Passenger>(p => p.PassportIdentityId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Passenger>()
+                .HasOne(p => p.ContactDetails)
+                .WithOne()
+                .HasForeignKey<Passenger>(p => p.ContactDetailsId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Booking>()
+                .HasOne(p => p.Passenger)
+                .WithMany(b => b.Bookings)
+                .HasForeignKey(b => b.PassengerId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Booking>()
+                .HasOne(i => i.Itinerary)
+                .WithMany(b => b.Bookings)
+                .HasForeignKey(b => b.ItineraryId)
+                .OnDelete(DeleteBehavior.Cascade);
 
         }
 

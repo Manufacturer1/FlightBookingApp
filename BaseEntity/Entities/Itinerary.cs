@@ -28,6 +28,7 @@ namespace BaseEntity.Entities
         public bool HasStops => Segments?.Count() > 1;
         public ICollection<FlightSegment>? Segments { get; set; }
         public Airline? Airline { get; set; }
+        public virtual ICollection<Booking>? Bookings { get; set; }
 
         private string CalculateTotalDuration()
         {

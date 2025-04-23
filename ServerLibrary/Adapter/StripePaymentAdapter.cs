@@ -31,7 +31,7 @@ namespace ServerLibrary.Adapter
             }
             catch (StripeException ex)
             {
-                _logger.LogError($"Stripe Error: {ex.StripeError?.Message ?? ex.Message}");
+                _logger.LogDebug($"Stripe Error: {ex.StripeError?.Message ?? ex.Message}");
                 return new PaymentResponse
                 {
                     Success = false,
@@ -40,7 +40,7 @@ namespace ServerLibrary.Adapter
             }
             catch(Exception ex)
             {
-                _logger.LogError(ex.Message);
+                _logger.LogDebug(ex.Message);
                 return new PaymentResponse
                 {
                     Success = false,

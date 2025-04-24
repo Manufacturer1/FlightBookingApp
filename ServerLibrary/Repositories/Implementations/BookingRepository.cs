@@ -23,6 +23,7 @@ namespace ServerLibrary.Repositories.Implementations
             {
                 await db.Bookings.AddAsync(booking);
                 await db.SaveChangesAsync();
+              
             }
             catch (DbException dbEx)
             {
@@ -32,14 +33,14 @@ namespace ServerLibrary.Repositories.Implementations
             {
                 return new GeneralReponse(false, $"Something went wrong {ex.Message}");
             }
-            return new GeneralReponse(true, $"Passenger {booking.Id} was added successfully");
+            return new GeneralReponse(true, $"Booking {booking.Id} was added successfully");
         }
 
         public async Task<IEnumerable<Booking>> GetAllAsync()
             => await db.Bookings.AsNoTracking()
             .Include(x => x.Passenger)
             .Include(x => x.Itinerary)
-            .ThenInclude(x => x.Segments!)
+            .ThenInclude(x => x!.Segments!)
             .ThenInclude(x => x.Flight)
             .ToListAsync();
 
@@ -47,7 +48,7 @@ namespace ServerLibrary.Repositories.Implementations
               => await db.Bookings
             .Include(x => x.Passenger)
              .Include(x => x.Itinerary)
-            .ThenInclude(x => x.Segments!)
+            .ThenInclude(x => x!.Segments!)
             .ThenInclude(x => x.Flight)
             .FirstOrDefaultAsync(x => x.Id == id);
 
@@ -70,7 +71,9 @@ namespace ServerLibrary.Repositories.Implementations
                 return new GeneralReponse(false, $"Something went wrong: {ex.Message}");
             }
 
-            return new GeneralReponse(true, $"Passenger {booking.Id} was removed successfully");
+            return new GeneralReponse(true, $"Booking {booking.Id} was removed successfully");
         }
+
+
     }
 }

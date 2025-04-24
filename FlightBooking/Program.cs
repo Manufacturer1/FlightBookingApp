@@ -129,15 +129,27 @@ builder.Services.AddCors(options =>
         {
             policy.WithOrigins("http://localhost:5173")
             .AllowAnyHeader()
-            .AllowAnyMethod();
+            .AllowAnyMethod()
+             .AllowCredentials();
 
         });
 });
 
-//Adapter register
+// Adapter register
 builder.Services.AddScoped<IPaymentGateway,StripePaymentAdapter>();
 
 
+// Memento register
+builder.Services.AddDistributedMemoryCache();
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromMinutes(20);
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest; 
+    options.Cookie.IsEssential = true;
+    options.Cookie.SameSite = SameSiteMode.None;
+});
 
 
 // Background service
@@ -215,6 +227,8 @@ app.UseCors("AllowClient");
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+app.UseSession();
 
 app.MapControllers();
 

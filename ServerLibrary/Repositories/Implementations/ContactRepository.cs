@@ -15,9 +15,8 @@ namespace ServerLibrary.Repositories.Implementations
         {
             this.db = db;
         }
-        public async Task<GeneralReponse> CreateAsync(ContactDetails contactDetails)
+        public async Task<int> CreateAsync(ContactDetails contactDetails)
         {
-            if (contactDetails == null) return new GeneralReponse(false, "Contact details is null.");
             try
             {
                 await db.ContactDetails.AddAsync(contactDetails);
@@ -25,13 +24,13 @@ namespace ServerLibrary.Repositories.Implementations
             }
             catch (DbException dbEx)
             {
-                return new GeneralReponse(false, $"Database error: {dbEx.Message}");
+                throw new Exception(dbEx.Message);
             }
             catch (Exception ex)
             {
-                return new GeneralReponse(false, $"Something went wrong {ex.Message}");
+                throw new Exception(ex.Message);
             }
-            return new GeneralReponse(true, $"Airport {contactDetails.Id} was added successfully");
+            return contactDetails.Id;
         }
 
         public async Task<IEnumerable<ContactDetails>> GetAllAsync()

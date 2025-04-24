@@ -15,9 +15,9 @@ namespace ServerLibrary.Repositories.Implementations
         {
             this.db = db;
         }
-        public async Task<GeneralReponse> CreateAsync(PassportIdentity passportIdentity)
+        public async Task<int> CreateAsync(PassportIdentity passportIdentity)
         {
-            if (passportIdentity == null) return new GeneralReponse(false, "Passport is null.");
+
             try
             {
                 await db.PassportIdentities.AddAsync(passportIdentity);
@@ -25,13 +25,13 @@ namespace ServerLibrary.Repositories.Implementations
             }
             catch (DbException dbEx)
             {
-                return new GeneralReponse(false, $"Database error: {dbEx.Message}");
+                throw new Exception(dbEx.Message);
             }
             catch (Exception ex)
             {
-                return new GeneralReponse(false, $"Something went wrong {ex.Message}");
+                throw new Exception(ex.Message);
             }
-            return new GeneralReponse(true, $"Passport {passportIdentity.Id} was added successfully");
+            return passportIdentity.Id;
         }
 
         public async Task<IEnumerable<PassportIdentity>> GetAllAsync()
@@ -49,6 +49,7 @@ namespace ServerLibrary.Repositories.Implementations
             {
                 db.PassportIdentities.Remove(passport);
                 await db.SaveChangesAsync();
+
             }
             catch (DbException dbEx)
             {

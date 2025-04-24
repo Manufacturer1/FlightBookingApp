@@ -15,23 +15,23 @@ namespace ServerLibrary.Repositories.Implementations
         {
             this.db = db;
         }
-        public async Task<GeneralReponse> CreateAsync(Passenger passenger)
+        public async Task<int> CreateAsync(Passenger passenger)
         {
-            if (passenger == null) return new GeneralReponse(false, "Passenger is null");
             try
             {
                 await db.Passengers.AddAsync(passenger);
                 await db.SaveChangesAsync();
+
             }
             catch (DbException dbEx)
             {
-                return new GeneralReponse(false, $"Database error: {dbEx.Message}");
+                throw new Exception(dbEx.Message);
             }
             catch (Exception ex)
             {
-                return new GeneralReponse(false, $"Something went wrong {ex.Message}");
+                throw new Exception(ex.Message);
             }
-            return new GeneralReponse(true, $"Passenger {passenger.Id} was added successfully");
+            return passenger.Id;
         }
 
         public async Task<IEnumerable<Passenger>> GetAllAsync()
@@ -54,6 +54,7 @@ namespace ServerLibrary.Repositories.Implementations
             {
                 db.Passengers.Remove(passenger);
                 await db.SaveChangesAsync();
+
             }
             catch (DbException dbEx)
             {

@@ -5,14 +5,10 @@ namespace BaseEntity.Dtos
     public class CreatePassportDto
     {
         [StringLength(100)]
-        [Required]
-        public string PassportNumber { get; set; } = string.Empty;
-        [Required]
-
+        public string? PassportNumber { get; set; }
         [StringLength(100)]
-        public string Country { get; set; } = string.Empty;
-        [Required]
+        public string? Country { get; set; }
         [DataType(DataType.Date)]
-        public DateTime ExpiryDate { get; set; }
+        public DateTime? ExpiryDate { get; set; }
     }
 }

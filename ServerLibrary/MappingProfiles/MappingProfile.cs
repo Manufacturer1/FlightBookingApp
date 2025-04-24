@@ -113,7 +113,7 @@ namespace ServerLibrary.MappingProfiles
 
             CreateMap<ContactDetails, GetContactDetailsDto>();
             CreateMap<PassportIdentity,GetPassportDto>();
-            CreateMap<Passenger, GetPassengerDto>();
+            CreateMap<Passenger, CreatePassengerDto>();
             CreateMap<Booking, GetBookingDto>();
         }
     }

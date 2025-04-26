@@ -1,5 +1,6 @@
 ﻿using BaseEntity.Entities;
 using BaseEntity.Responses;
+using System.Linq.Expressions;
 
 namespace ServerLibrary.Repositories.Interfaces
 {
@@ -10,5 +11,6 @@ namespace ServerLibrary.Repositories.Interfaces
         Task<Passenger?> GetAsync(int id);
         Task<IEnumerable<Passenger>> GetAllAsync();
         Task<GeneralReponse> UpdateAsync(Passenger passenger);
+        Task<Passenger?> FindAsync(Expression<Func<Passenger, bool>> expression);
     }
 }

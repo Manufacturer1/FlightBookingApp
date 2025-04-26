@@ -98,5 +98,9 @@ namespace ServerLibrary.Repositories.Implementations
                 return new GeneralReponse(false, $"Something went wrong {ex.Message}");
             }
         }
+        public async Task<Passenger?> FindAsync(Expression<Func<Passenger, bool>> expression)
+        {
+            return await db.Passengers.Where(expression).FirstOrDefaultAsync();
+        }
     }
 }

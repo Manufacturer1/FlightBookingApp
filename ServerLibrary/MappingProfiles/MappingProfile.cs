@@ -81,7 +81,9 @@ namespace ServerLibrary.MappingProfiles
             CreateMap<CreateContactDetailsDto, ContactDetails>();
             CreateMap<CreatePassportDto, PassportIdentity>();
             CreateMap<CreatePassengerDto, Passenger>();
-            CreateMap<CreateBookingDto, Booking>(); 
+            CreateMap<CreateBookingDto, Booking>();
+
+            CreateMap<MarkNotificationReadDto, Notification>();
 
             //From entity to dto
             CreateMap<Flight, GetFlightDto>();

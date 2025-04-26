@@ -117,6 +117,7 @@ namespace ServerLibrary.Services.Implementations
             {
                 Id = id,
                 BookingId = ticket.BookingId,
+                FlightNumber = flight.FlightNumber,
                 CheckInDate = ticket.CheckInDate,
                 IssueDate = ticket.IssueDate,
                 AirlineBookingCode = ticket.AirlineBookingCode,

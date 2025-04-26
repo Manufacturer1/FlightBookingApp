@@ -115,6 +115,7 @@ namespace ServerLibrary.MappingProfiles
             CreateMap<PassportIdentity,GetPassportDto>();
             CreateMap<Passenger, CreatePassengerDto>();
             CreateMap<Booking, GetBookingDto>();
+            CreateMap<Notification, GetNotificationDto>();
         }
     }
 }

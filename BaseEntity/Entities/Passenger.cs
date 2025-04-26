@@ -17,5 +17,6 @@ namespace BaseEntity.Entities
         public PassportIdentity? PassportIdentity { get; set; }
         public ContactDetails? ContactDetails { get; set; }
         public ICollection<Booking>? Bookings { get; set; }
+        public ICollection<Notification>? Notifications { get; set; }
     }
 }

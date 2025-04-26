@@ -1,5 +1,6 @@
 using BaseEntity.Configurations;
 using BaseEntity.Entities;
+using BaseEntity.Enums;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.StaticFiles;
@@ -7,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using ServerLibrary.AbstractFactory;
 using ServerLibrary.Adapter;
 using ServerLibrary.BackgroundServices;
 using ServerLibrary.Data;
@@ -133,6 +135,17 @@ builder.Services.AddCors(options =>
         });
 });
 
+// Singleton register
+var emailConfig = builder.Configuration.GetSection("EMAIL_CONFIGURATION");
+
+EmailConfiguration.Initialize(
+    host: emailConfig["Host"] ?? throw new ArgumentNullException("Host is missing in configuration."),
+    port: int.Parse(emailConfig["Port"] ?? throw new ArgumentNullException("Port is missing in configuration.")),
+    email: emailConfig["Email"] ?? throw new ArgumentNullException("Email is missing in configuration."),
+    password: emailConfig["Password"] ?? throw new ArgumentNullException("Password is missing in configuration.")
+);
+
+
 // Adapter register
 builder.Services.AddScoped<IPaymentGateway,StripePaymentAdapter>();
 
@@ -147,6 +160,21 @@ builder.Services.AddSession(options =>
     options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest; 
     options.Cookie.IsEssential = true;
     options.Cookie.SameSite = SameSiteMode.None;
+});
+
+
+//Abstract factory register
+builder.Services.AddScoped<EmailNotificationFactory>();
+builder.Services.AddScoped<InAppNotificationFactory>();
+
+builder.Services.AddScoped<Func<NotificationChannel, INotificationFactory>>(serviceProvider => key =>
+{
+    return key switch
+    {
+        NotificationChannel.Email => serviceProvider.GetRequiredService<EmailNotificationFactory>(),
+        NotificationChannel.InApp => serviceProvider.GetRequiredService<InAppNotificationFactory>(),
+        _ => throw new ArgumentException("Invalid notification factory channel.", nameof(key))
+    };
 });
 
 
@@ -170,6 +198,7 @@ builder.Services.AddScoped<IPassengerRepository, PassengerRepository>();
 builder.Services.AddScoped<IPassportIdentityRepository, PassportIdentityRepository>();
 builder.Services.AddScoped<IBookingRepository,BookingRepository>();
 builder.Services.AddScoped<ITicketRepository, TicketRepository>();
+builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
 
 
 
@@ -187,6 +216,7 @@ builder.Services.AddScoped<IDiscountService,ServerLibrary.Services.Implementatio
 builder.Services.AddScoped<IPaymentService,StripePaymentService>();
 builder.Services.AddScoped<IBookingService,BookingService>();
 builder.Services.AddScoped<ITicketService, TicketService>();
+builder.Services.AddScoped<INotificationService, NotificationService>();    
 
 
 var app = builder.Build();

@@ -37,19 +37,30 @@ namespace ServerLibrary.Repositories.Implementations
         }
 
         public async Task<IEnumerable<Booking>> GetAllAsync()
-            => await db.Bookings.AsNoTracking()
-            .Include(x => x.Passenger)
-            .Include(x => x.Itinerary)
-            .ThenInclude(x => x!.Segments!)
-            .ThenInclude(x => x.Flight)
-            .ToListAsync();
+       => await db.Bookings.AsNoTracking()
+           .Include(x => x.Passenger)
+           .Include(x => x.Itinerary)
+               .ThenInclude(x => x!.Airline)
+           .Include(x => x.Itinerary)
+               .ThenInclude(x => x!.Airline)
+               .ThenInclude(x => x!.BaggagePolicy)
+           .Include(x => x.Itinerary)
+               .ThenInclude(x => x!.Segments)!
+                   .ThenInclude(segment => segment.Flight)
+           .ToListAsync();
+
 
         public async Task<Booking?> GetAsync(int id)
               => await db.Bookings
-            .Include(x => x.Passenger)
-             .Include(x => x.Itinerary)
-            .ThenInclude(x => x!.Segments!)
-            .ThenInclude(x => x.Flight)
+           .Include(x => x.Passenger)
+           .Include(x => x.Itinerary)
+               .ThenInclude(x => x!.Airline)
+           .Include(x => x.Itinerary)
+               .ThenInclude(x => x!.Airline)
+               .ThenInclude(x => x!.BaggagePolicy)
+           .Include(x => x.Itinerary)
+               .ThenInclude(x => x!.Segments)!
+                   .ThenInclude(segment => segment.Flight)
             .FirstOrDefaultAsync(x => x.Id == id);
 
         public async Task<GeneralReponse> RemoveAsync(int id)

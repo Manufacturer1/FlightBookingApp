@@ -25,6 +25,7 @@ namespace ServerLibrary.Data
         public DbSet<ContactDetails> ContactDetails { get; set; }
         public DbSet<PassportIdentity> PassportIdentities { get; set; }
         public DbSet<Ticket> Tickets { get; set; }
+        public DbSet<Notification> Notifications { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -133,6 +134,11 @@ namespace ServerLibrary.Data
                   .HasPrecision(5, 2);
             });
 
+            modelBuilder.Entity<ContactDetails>()
+                    .HasIndex(c => c.Email)
+                    .IsUnique();
+
+
             modelBuilder.Entity<Passenger>()
                 .HasOne(p => p.PassportIdentity)
                 .WithOne()
@@ -168,6 +174,13 @@ namespace ServerLibrary.Data
                 .WithMany(t => t.Tickets)
                 .HasForeignKey(t => t.FlightNumber)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Notification>()
+                 .HasOne(p => p.Passenger)
+                 .WithMany(n => n.Notifications)
+                 .HasForeignKey(p => p.PassengerId)
+                 .OnDelete(DeleteBehavior.Cascade);
+
         }
 
 

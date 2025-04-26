@@ -77,14 +77,31 @@ namespace ServerLibrary.Services.Implementations
             try
             {
                 var contact = _mapper.Map<ContactDetails>(draft.ContactDetails);
-                var contactId = await _contactRepository.CreateAsync(contact);
-       
+                var existingContacts = await _contactRepository.FindAsync(x => x.Email == draft.ContactDetails.Email);
+
+                var existingContact = existingContacts.FirstOrDefault();
+                int contactId = 0;
+
+                if (existingContact != null)
+                {
+                    contact.Id = existingContact.Id;
+
+                    var updateResponse = await _contactRepository.UpdateAsync(contact);
+                    if (!updateResponse.Flag) return new BookingResponse(false, updateResponse.Message, null);
+
+                    contactId = existingContact.Id;
+                }
+                else
+                {
+                    contactId = await _contactRepository.CreateAsync(contact);
+                }
 
                 var passport = _mapper.Map<PassportIdentity>(draft.Passport);
                 var passportId = await _passportIdentityRepository.CreateAsync(passport);
        
 
                 var passenger = _mapper.Map<Passenger>(draft.Passenger);
+                var existingPassenger = 
                 passenger.ContactDetailsId = contactId;
                 passenger.PassportIdentityId = passportId;
                 var passengerId = await _passengerRepository.CreateAsync(passenger);
@@ -182,6 +199,7 @@ namespace ServerLibrary.Services.Implementations
                 string.IsNullOrEmpty(contactDetails.Email)) return new GeneralReponse(false, "Misssing some contact data.");
 
 
+
             return new GeneralReponse(true,"Contact validated");
                 
         }
@@ -195,9 +213,10 @@ namespace ServerLibrary.Services.Implementations
             if (passenger.BirthDay.Date >= DateTime.Now.Date)
                 return new GeneralReponse(false, "The birthday cannot be in present or future.");
 
+
             return new GeneralReponse(true,"Passenger created.");
         }
-        private GeneralReponse ValidatePassport(CreatePassportDto passport)
+        private GeneralReponse ValidatePassport(CreatePassportDto passport) 
         {
             if (string.IsNullOrEmpty(passport.PassportNumber) ||
                 string.IsNullOrEmpty(passport.Country)

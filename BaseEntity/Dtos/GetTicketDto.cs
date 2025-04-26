@@ -1,12 +1,10 @@
-﻿using BaseEntity.Entities;
-using System.ComponentModel.DataAnnotations;
-
-namespace BaseEntity.Dtos
+﻿namespace BaseEntity.Dtos
 {
     public class GetTicketDto
     {
         public int Id { get; set; }
         public int BookingId { get; set; }
+        public string FlightNumber { get; set; } = string.Empty;
         public string AirlineBookingCode { get; set; } = string.Empty;
         public DateTime IssueDate { get; set; } = DateTime.Now;
         public DateTime CheckInDate { get; set; } = DateTime.Now;

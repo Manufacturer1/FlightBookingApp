@@ -61,5 +61,12 @@ namespace FlightBooking.Controllers
 
             return Ok("Booking history removed successfully");
         }
+
+        [HttpGet("getall")]
+        public async Task<IActionResult> GetAllAsync()
+        {
+            var bookings = await _bookingService.GetAllBookingsAsync();
+            return Ok(bookings);
+        }
     }
 }

@@ -139,17 +139,32 @@ namespace ServerLibrary.Data
                     .IsUnique();
 
 
+            // In OnModelCreating
+            modelBuilder.Entity<PassportIdentity>()
+                .HasOne<Passenger>() 
+                .WithOne(p => p.PassportIdentity)
+                .HasForeignKey<Passenger>(p => p.PassportIdentityId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<ContactDetails>()
+                .HasOne<Passenger>() 
+                .WithOne(p => p.ContactDetails)
+                .HasForeignKey<Passenger>(p => p.ContactDetailsId)
+                .OnDelete(DeleteBehavior.Cascade);
+
             modelBuilder.Entity<Passenger>()
                 .HasOne(p => p.PassportIdentity)
                 .WithOne()
                 .HasForeignKey<Passenger>(p => p.PassportIdentityId)
                 .OnDelete(DeleteBehavior.Cascade);
 
+            // Passenger --> ContactDetails
             modelBuilder.Entity<Passenger>()
                 .HasOne(p => p.ContactDetails)
                 .WithOne()
                 .HasForeignKey<Passenger>(p => p.ContactDetailsId)
                 .OnDelete(DeleteBehavior.Cascade);
+
 
             modelBuilder.Entity<Booking>()
                 .HasOne(p => p.Passenger)

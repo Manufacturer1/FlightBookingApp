@@ -9,5 +9,6 @@ namespace ServerLibrary.Repositories.Interfaces
         Task<GeneralReponse> RemoveAsync(int id);
         Task<PassportIdentity?> GetByIdAsync(int id);
         Task<IEnumerable<PassportIdentity>> GetAllAsync();
+        Task<GeneralReponse> UpdateAsync(PassportIdentity passportIdentity);
     }
 }

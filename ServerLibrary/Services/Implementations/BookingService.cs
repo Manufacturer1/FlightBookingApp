@@ -4,8 +4,10 @@ using BaseEntity.Entities;
 using BaseEntity.Responses;
 using Microsoft.AspNetCore.Http;
 using ServerLibrary.Memento;
+using ServerLibrary.Repositories.Implementations;
 using ServerLibrary.Repositories.Interfaces;
 using ServerLibrary.Services.Interfaces;
+using System.Transactions;
 
 namespace ServerLibrary.Services.Implementations
 {
@@ -45,7 +47,9 @@ namespace ServerLibrary.Services.Implementations
         }
 
 
-        public async Task<BookingResponse> BookSeatAsync(CreateBookingDto createBooking)
+    public async Task<BookingResponse> BookSeatAsync(CreateBookingDto createBooking)
+    {
+        using (var scope = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled))
         {
             // Step 1: Validate itinerary
             var itinerary = await _itineraryRepository.GetByIdAsync(createBooking.ItineraryId);
@@ -77,35 +81,49 @@ namespace ServerLibrary.Services.Implementations
             try
             {
                 var contact = _mapper.Map<ContactDetails>(draft.ContactDetails);
-                var existingContacts = await _contactRepository.FindAsync(x => x.Email == draft.ContactDetails.Email);
+                var passport = _mapper.Map<PassportIdentity>(draft.Passport);
+                var passenger = _mapper.Map<Passenger>(draft.Passenger);
 
-                var existingContact = existingContacts.FirstOrDefault();
                 int contactId = 0;
+                int passportId = 0;
+                int passengerId = 0;
 
-                if (existingContact != null)
+                var passengers = await _passengerRepository.GetAllAsync();
+                var existingPassenger = passengers
+                    .Where(x => x.ContactDetails!.Email.Equals(draft.ContactDetails.Email, StringComparison.OrdinalIgnoreCase))
+                    .FirstOrDefault();
+
+                if (existingPassenger != null)
                 {
-                    contact.Id = existingContact.Id;
+                    contact.Id = existingPassenger.ContactDetailsId;
+                    passport.Id = existingPassenger.PassportIdentityId;
+                    passenger.Id = existingPassenger.Id;
 
-                    var updateResponse = await _contactRepository.UpdateAsync(contact);
-                    if (!updateResponse.Flag) return new BookingResponse(false, updateResponse.Message, null);
+                    var contactUpdateResponse = await _contactRepository.UpdateAsync(contact);
+                    if (!contactUpdateResponse.Flag)
+                        return new BookingResponse(false, contactUpdateResponse.Message, null);
 
-                    contactId = existingContact.Id;
+                    var passportUpdateResponse = await _passportIdentityRepository.UpdateAsync(passport);
+                    if (!passportUpdateResponse.Flag)
+                        return new BookingResponse(false, passportUpdateResponse.Message, null);
+
+                    var passengerUpdateResponse = await _passengerRepository.UpdateAsync(passenger);
+                    if (!passengerUpdateResponse.Flag)
+                        return new BookingResponse(false, passengerUpdateResponse.Message, null);
+
+                    contactId = existingPassenger.ContactDetailsId;
+                    passportId = existingPassenger.PassportIdentityId;
+                    passengerId = existingPassenger.Id;
                 }
                 else
                 {
                     contactId = await _contactRepository.CreateAsync(contact);
+                    passportId = await _passportIdentityRepository.CreateAsync(passport);
+
+                    passenger.ContactDetailsId = contactId;
+                    passenger.PassportIdentityId = passportId;
+                    passengerId = await _passengerRepository.CreateAsync(passenger);
                 }
-
-                var passport = _mapper.Map<PassportIdentity>(draft.Passport);
-                var passportId = await _passportIdentityRepository.CreateAsync(passport);
-       
-
-                var passenger = _mapper.Map<Passenger>(draft.Passenger);
-                var existingPassenger = 
-                passenger.ContactDetailsId = contactId;
-                passenger.PassportIdentityId = passportId;
-                var passengerId = await _passengerRepository.CreateAsync(passenger);
-           
 
                 // Step 5: Create booking
                 var booking = _mapper.Map<Booking>(createBooking);
@@ -128,29 +146,31 @@ namespace ServerLibrary.Services.Implementations
                 }
 
                 // Step 7: Save booking
-                var (createResult,bookingId) =  await _bookingRepository.CreateAsync(booking);
+                var (createResult, bookingId) = await _bookingRepository.CreateAsync(booking);
                 if (!createResult.Flag || !bookingId.HasValue)
                     return new BookingResponse(createResult.Flag, createResult.Message, null);
 
-
                 // Step 8: Generate tickets
                 var createTicket = new CreateTicketDto { BookingId = bookingId.Value };
-                var (ticketResponse,tickets) = await _ticketService.GenerateTicketAsync(createTicket);
-                if (!ticketResponse.Flag || tickets == null && !tickets!.Any()) return new BookingResponse(ticketResponse.Flag, ticketResponse.Message, null);
+                var (ticketResponse, tickets) = await _ticketService.GenerateTicketAsync(createTicket);
+                if (!ticketResponse.Flag || tickets == null || !tickets.Any())
+                    return new BookingResponse(ticketResponse.Flag, ticketResponse.Message, null);
 
+                // If everything is OK, complete the transaction
+                scope.Complete();
 
-
-
-                return new BookingResponse(true, "Successfuly booked and generated tickets", tickets);
+                return new BookingResponse(true, "Successfully booked and generated tickets", tickets);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 return new BookingResponse(false, ex.Message, null);
             }
         }
+    }
 
 
-        public async Task<IEnumerable<GetBookingDto>> GetAllBookingsAsync()
+
+    public async Task<IEnumerable<GetBookingDto>> GetAllBookingsAsync()
         {
             var bookings = await _bookingRepository.GetAllAsync();
             return _mapper.Map<IEnumerable<GetBookingDto>>(bookings);

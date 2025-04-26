@@ -61,5 +61,33 @@ namespace ServerLibrary.Repositories.Implementations
             }
             return new GeneralReponse(true, $"Passport {id} was deleted successfuly");
         }
+
+        public async Task<GeneralReponse> UpdateAsync(PassportIdentity passportIdentity)
+        {
+            var passport = await db.PassportIdentities.FirstOrDefaultAsync(x => x.Id == passportIdentity.Id);
+            if (passport == null) return new GeneralReponse(false, "Passport was not found.");
+
+            try
+            {
+                if(!string.IsNullOrEmpty(passportIdentity.Country))
+                    passport.Country = passportIdentity.Country;
+                if (!string.IsNullOrEmpty(passportIdentity.PassportNumber))
+                    passport.PassportNumber = passportIdentity.PassportNumber;
+                if (passportIdentity.ExpiryDate.Date != passport.ExpiryDate.Date)
+                    passport.ExpiryDate = passportIdentity.ExpiryDate;
+
+                await db.SaveChangesAsync();
+
+                return new GeneralReponse(true, "Passport updated successfuly.");
+            }
+            catch (DbException dbEx)
+            {
+                return new GeneralReponse(false, $"Database error: {dbEx.Message}");
+            }
+            catch (Exception ex)
+            {
+                return new GeneralReponse(false, $"Something went wrong {ex.Message}");
+            }
+        }
     }
 }

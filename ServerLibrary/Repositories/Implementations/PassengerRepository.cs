@@ -68,5 +68,35 @@ namespace ServerLibrary.Repositories.Implementations
 
             return new GeneralReponse(true, $"Passenger {passenger.Id} was removed successfully");
         }
+        public async Task<GeneralReponse> UpdateAsync(Passenger passenger)
+        {
+            var existingPassenger = await db.Passengers.FirstOrDefaultAsync(x => x.Id == passenger.Id);
+
+            if (existingPassenger == null) return new GeneralReponse(false, "The passenger was not found.");
+
+            try
+            {
+                if(!string.IsNullOrEmpty(passenger.Name))
+                    existingPassenger.Name = passenger.Name;
+                if (!string.IsNullOrEmpty(passenger.Surname))
+                    existingPassenger.Surname = passenger.Surname;
+                if(!string.IsNullOrEmpty(passenger.Nationality))
+                    existingPassenger.Nationality = passenger.Nationality;
+                if (existingPassenger.BirthDay.Date != passenger.BirthDay.Date)
+                    existingPassenger.BirthDay = passenger.BirthDay;
+
+                await db.SaveChangesAsync();
+
+                return new GeneralReponse(true, "Passenger updated successfully.");
+            }
+            catch (DbException dbEx)
+            {
+                return new GeneralReponse(false, $"Database error: {dbEx.Message}");
+            }
+            catch (Exception ex)
+            {
+                return new GeneralReponse(false, $"Something went wrong {ex.Message}");
+            }
+        }
     }
 }

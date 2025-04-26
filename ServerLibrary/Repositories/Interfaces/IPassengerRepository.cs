@@ -9,5 +9,6 @@ namespace ServerLibrary.Repositories.Interfaces
         Task<GeneralReponse> RemoveAsync(int id);
         Task<Passenger?> GetAsync(int id);
         Task<IEnumerable<Passenger>> GetAllAsync();
+        Task<GeneralReponse> UpdateAsync(Passenger passenger);
     }
 }

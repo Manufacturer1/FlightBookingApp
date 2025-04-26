@@ -53,7 +53,7 @@ namespace ServerLibrary.Data.Migrations
 
                     b.HasIndex("BaggagePolicyId");
 
-                    b.ToTable("Airlines");
+                    b.ToTable("Airlines", (string)null);
                 });
 
             modelBuilder.Entity("BaseEntity.Entities.Airport", b =>
@@ -74,7 +74,7 @@ namespace ServerLibrary.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Airports");
+                    b.ToTable("Airports", (string)null);
                 });
 
             modelBuilder.Entity("BaseEntity.Entities.Amenity", b =>
@@ -99,7 +99,7 @@ namespace ServerLibrary.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Amenities");
+                    b.ToTable("Amenities", (string)null);
                 });
 
             modelBuilder.Entity("BaseEntity.Entities.ApplicationUser", b =>
@@ -207,7 +207,7 @@ namespace ServerLibrary.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Baggages");
+                    b.ToTable("Baggages", (string)null);
                 });
 
             modelBuilder.Entity("BaseEntity.Entities.Booking", b =>
@@ -241,7 +241,7 @@ namespace ServerLibrary.Data.Migrations
 
                     b.HasIndex("PassengerId");
 
-                    b.ToTable("Bookings");
+                    b.ToTable("Bookings", (string)null);
                 });
 
             modelBuilder.Entity("BaseEntity.Entities.ContactDetails", b =>
@@ -277,7 +277,7 @@ namespace ServerLibrary.Data.Migrations
                     b.HasIndex("Email")
                         .IsUnique();
 
-                    b.ToTable("ContactDetails");
+                    b.ToTable("ContactDetails", (string)null);
                 });
 
             modelBuilder.Entity("BaseEntity.Entities.Discount", b =>
@@ -301,7 +301,7 @@ namespace ServerLibrary.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Discounts");
+                    b.ToTable("Discounts", (string)null);
                 });
 
             modelBuilder.Entity("BaseEntity.Entities.Flight", b =>
@@ -373,7 +373,7 @@ namespace ServerLibrary.Data.Migrations
 
                     b.HasIndex("PlaneId");
 
-                    b.ToTable("Flights");
+                    b.ToTable("Flights", (string)null);
                 });
 
             modelBuilder.Entity("BaseEntity.Entities.FlightAmenity", b =>
@@ -396,7 +396,7 @@ namespace ServerLibrary.Data.Migrations
 
                     b.HasIndex("FlightNumber");
 
-                    b.ToTable("FlightAmenities");
+                    b.ToTable("FlightAmenities", (string)null);
                 });
 
             modelBuilder.Entity("BaseEntity.Entities.FlightSegment", b =>
@@ -423,7 +423,7 @@ namespace ServerLibrary.Data.Migrations
 
                     b.HasIndex("ItineraryId");
 
-                    b.ToTable("Segments");
+                    b.ToTable("Segments", (string)null);
                 });
 
             modelBuilder.Entity("BaseEntity.Entities.Itinerary", b =>
@@ -452,7 +452,7 @@ namespace ServerLibrary.Data.Migrations
 
                     b.HasIndex("AirlineId");
 
-                    b.ToTable("Itineraries");
+                    b.ToTable("Itineraries", (string)null);
                 });
 
             modelBuilder.Entity("BaseEntity.Entities.Notification", b =>
@@ -486,7 +486,7 @@ namespace ServerLibrary.Data.Migrations
 
                     b.HasIndex("PassengerId");
 
-                    b.ToTable("Notifications");
+                    b.ToTable("Notifications", (string)null);
                 });
 
             modelBuilder.Entity("BaseEntity.Entities.Passenger", b =>
@@ -529,7 +529,7 @@ namespace ServerLibrary.Data.Migrations
                     b.HasIndex("PassportIdentityId")
                         .IsUnique();
 
-                    b.ToTable("Passengers");
+                    b.ToTable("Passengers", (string)null);
                 });
 
             modelBuilder.Entity("BaseEntity.Entities.PassportIdentity", b =>
@@ -555,7 +555,7 @@ namespace ServerLibrary.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("PassportIdentities");
+                    b.ToTable("PassportIdentities", (string)null);
                 });
 
             modelBuilder.Entity("BaseEntity.Entities.Plane", b =>
@@ -583,7 +583,7 @@ namespace ServerLibrary.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Planes");
+                    b.ToTable("Planes", (string)null);
                 });
 
             modelBuilder.Entity("BaseEntity.Entities.Ticket", b =>
@@ -623,7 +623,7 @@ namespace ServerLibrary.Data.Migrations
 
                     b.HasIndex("FlightNumber");
 
-                    b.ToTable("Tickets");
+                    b.ToTable("Tickets", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>

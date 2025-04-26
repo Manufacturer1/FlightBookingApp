@@ -64,13 +64,12 @@ namespace ServerLibrary.Memento
         public Stack<BookingDraftMemento> GetUndoStack()
         {
             var list = _session.Get<List<BookingDraftMemento>>(UndoStackKey);
-            return list == null ? new Stack<BookingDraftMemento>() : new Stack<BookingDraftMemento>(list);
+            return list == null ? new Stack<BookingDraftMemento>() : new Stack<BookingDraftMemento>(list.Reverse<BookingDraftMemento>());
         }
-
         private Stack<BookingDraftMemento> GetRedoStack()
         {
             var list = _session.Get<List<BookingDraftMemento>>(RedoStackKey);
-            return list == null ? new Stack<BookingDraftMemento>() : new Stack<BookingDraftMemento>(list);
+            return list == null ? new Stack<BookingDraftMemento>() : new Stack<BookingDraftMemento>(list.Reverse<BookingDraftMemento>());
         }
 
         private void SaveStacks(Stack<BookingDraftMemento> undoStack, Stack<BookingDraftMemento> redoStack)

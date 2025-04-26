@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using ServerLibrary.Data;
 
@@ -11,9 +12,11 @@ using ServerLibrary.Data;
 namespace ServerLibrary.Data.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250425143157_addedTickets")]
+    partial class addedTickets
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -568,23 +571,13 @@ namespace ServerLibrary.Data.Migrations
                     b.Property<DateTime>("CheckInDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("FlightNumber")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
                     b.Property<DateTime>("IssueDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("PaymentIntentId")
-                        .IsRequired()
-                        .HasMaxLength(30)
-                        .HasColumnType("nvarchar(30)");
-
                     b.HasKey("Id");
 
-                    b.HasIndex("BookingId");
-
-                    b.HasIndex("FlightNumber");
+                    b.HasIndex("BookingId")
+                        .IsUnique();
 
                     b.ToTable("Tickets");
                 });
@@ -845,20 +838,12 @@ namespace ServerLibrary.Data.Migrations
             modelBuilder.Entity("BaseEntity.Entities.Ticket", b =>
                 {
                     b.HasOne("BaseEntity.Entities.Booking", "Booking")
-                        .WithMany("Tickets")
-                        .HasForeignKey("BookingId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("BaseEntity.Entities.Flight", "Flight")
-                        .WithMany("Tickets")
-                        .HasForeignKey("FlightNumber")
+                        .WithOne("Ticket")
+                        .HasForeignKey("BaseEntity.Entities.Ticket", "BookingId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Booking");
-
-                    b.Navigation("Flight");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -936,7 +921,7 @@ namespace ServerLibrary.Data.Migrations
 
             modelBuilder.Entity("BaseEntity.Entities.Booking", b =>
                 {
-                    b.Navigation("Tickets");
+                    b.Navigation("Ticket");
                 });
 
             modelBuilder.Entity("BaseEntity.Entities.Flight", b =>
@@ -944,8 +929,6 @@ namespace ServerLibrary.Data.Migrations
                     b.Navigation("FlightAmenities");
 
                     b.Navigation("Segments");
-
-                    b.Navigation("Tickets");
                 });
 
             modelBuilder.Entity("BaseEntity.Entities.Itinerary", b =>

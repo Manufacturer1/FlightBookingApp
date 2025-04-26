@@ -8,8 +8,6 @@ namespace BaseEntity.Dtos
         public int PassengerNumberSelected { get; set; } = 1;
         [Required]
         public int ItineraryId { get; set; }
-        [Required]
-        public string? PaymentIntentId { get; set; }
         public DateTime BookingDate { get; set; } = DateTime.Now;
 
     }

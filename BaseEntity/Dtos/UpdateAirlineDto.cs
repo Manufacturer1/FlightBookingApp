@@ -9,6 +9,7 @@ namespace BaseEntity.Dtos
         public int Id { get; set; }
         public int? BaggagePolicyId { get; set; }
         public string? Name { get; set; }
+        public string? IataCode { get; set; } = string.Empty;
         public IFormFile? AirlineImage { get; set; }
         public string? AirlineBgColor { get; set; }
     }

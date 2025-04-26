@@ -8,7 +8,8 @@ namespace ServerLibrary.Memento
         public CreatePassengerDto? Passenger { get; set; }
         public CreatePassportDto? Passport { get; set; }
         public CreateContactDetailsDto? ContactDetails { get; set; }
-
+        public string? PaymentIntentId { get; set; }
+        public int? ActiveStep {  get; set; }
         public BookingDraftMemento Save()
         {
             var passenger = Passenger == null ? null : new CreatePassengerDto
@@ -33,8 +34,13 @@ namespace ServerLibrary.Memento
                 Name = ContactDetails.Name,
                 PhoneNumber = ContactDetails.PhoneNumber,
             };
+        
 
-            return new BookingDraftMemento(passport, passenger, contactDetails);
+            string paymentIntentId = PaymentIntentId!;
+            int activeStep = ActiveStep ?? 0;
+ 
+
+            return new BookingDraftMemento(passport, passenger, contactDetails,paymentIntentId,activeStep);
         }
 
         public void Restore(BookingDraftMemento memento)
@@ -42,6 +48,7 @@ namespace ServerLibrary.Memento
             Passenger = memento.Passenger;
             Passport = memento.Passport;
             ContactDetails = memento.ContactDetails;
+            PaymentIntentId = memento.PaymentIntentId;
         }
     }
 }

@@ -41,6 +41,7 @@ namespace BaseEntity.Entities
         public Airport? OriginAirport { get; set; }
         public Airport? DestinationAirport { get; set; }
         public virtual ICollection<FlightAmenity>? FlightAmenities { get; set; }
+        public virtual ICollection<Ticket>? Tickets { get; set; }
 
     }
 }

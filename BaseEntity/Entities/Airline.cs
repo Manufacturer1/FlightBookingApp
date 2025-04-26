@@ -1,9 +1,12 @@
-﻿namespace BaseEntity.Entities
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace BaseEntity.Entities
 {
     public class Airline
     {
         public int Id { get; set; }
         public string Name { get; set; } = string.Empty;
+        public string IataCode { get; set; } = string.Empty;
         public string AirlineImageUrl { get; set; } = string.Empty;
         public string AirlineBgColor { get; set; } = "#0D78C9FF";
         public ICollection<Itinerary>? Itineraries { get; set; }

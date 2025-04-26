@@ -62,6 +62,7 @@ namespace ServerLibrary.Repositories.Implementations
                             .Include(x => x.Airline)
                             .Include(x => x.Segments!)
                             .ThenInclude(x => x.Flight)
+            
                             .ToListAsync(); 
 
         public async Task<Itinerary?> GetByIdAsync(int id)

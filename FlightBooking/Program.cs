@@ -1,4 +1,3 @@
-using AutoMapper;
 using BaseEntity.Configurations;
 using BaseEntity.Entities;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -17,7 +16,6 @@ using ServerLibrary.Repositories.Interfaces;
 using ServerLibrary.Services.Implementations;
 using ServerLibrary.Services.Interfaces;
 using Stripe;
-using System.Net.NetworkInformation;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -171,6 +169,7 @@ builder.Services.AddScoped<IContactRepository, ContactRepository>();
 builder.Services.AddScoped<IPassengerRepository, PassengerRepository>();
 builder.Services.AddScoped<IPassportIdentityRepository, PassportIdentityRepository>();
 builder.Services.AddScoped<IBookingRepository,BookingRepository>();
+builder.Services.AddScoped<ITicketRepository, TicketRepository>();
 
 
 
@@ -187,6 +186,7 @@ builder.Services.AddScoped<IAmenityService,AmenityService>();
 builder.Services.AddScoped<IDiscountService,ServerLibrary.Services.Implementations.DiscountService>();
 builder.Services.AddScoped<IPaymentService,StripePaymentService>();
 builder.Services.AddScoped<IBookingService,BookingService>();
+builder.Services.AddScoped<ITicketService, TicketService>();
 
 
 var app = builder.Build();

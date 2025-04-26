@@ -14,5 +14,6 @@ namespace BaseEntity.Entities
         public string PaymentIntentId { get; set; } = string.Empty;
         public Itinerary? Itinerary { get; set; }
         public Passenger? Passenger { get; set; }
+        public virtual ICollection<Ticket>? Tickets { get; set; }
     }
 }

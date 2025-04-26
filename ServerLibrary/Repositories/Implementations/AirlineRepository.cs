@@ -74,9 +74,17 @@ namespace ServerLibrary.Repositories.Implementations
            var entity = await db.Airlines.FirstOrDefaultAsync(x => x.Id == airline.Id);
             if (entity == null) return new GeneralReponse(false, "Airline was not found");
 
-            entity.AirlineImageUrl = airline.AirlineImageUrl;
-            entity.Name = airline.Name;
-            entity.AirlineBgColor = airline.AirlineBgColor;
+            if(!string.IsNullOrEmpty(airline.AirlineImageUrl))
+                entity.AirlineImageUrl = airline.AirlineImageUrl;
+
+            if(!string.IsNullOrEmpty(airline.Name))
+                entity.Name = airline.Name;
+
+            if(!string.IsNullOrEmpty(airline.AirlineBgColor))
+                entity.AirlineBgColor = airline.AirlineBgColor;
+
+            if (!string.IsNullOrEmpty(airline.IataCode))
+                entity.IataCode = airline.IataCode;
 
             try
             {

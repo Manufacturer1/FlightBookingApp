@@ -23,10 +23,10 @@ namespace FlightBooking.Controllers
             if (request == null) return BadRequest("Request is null");
 
             var response = await _bookingService.BookSeatAsync(request);
-            if (!response.Flag)
+            if (!response.Success)
                 return BadRequest(response.Message);
 
-            return Ok(response.Message);
+            return Ok(response);
         }
 
         [HttpPost("save-state")]

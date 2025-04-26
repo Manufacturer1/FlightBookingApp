@@ -20,6 +20,7 @@ namespace ServerLibrary.Services.Implementations
         private readonly IPassengerRepository _passengerRepository;
         private readonly IPassportIdentityRepository _passportIdentityRepository;
         private readonly IContactRepository _contactRepository;
+        private readonly ITicketService _ticketService;
 
         public BookingService(IBookingRepository bookingRepository,
             IFlightRepository flightRepository,
@@ -28,7 +29,8 @@ namespace ServerLibrary.Services.Implementations
             IHttpContextAccessor httpContextAccessor,
             IPassengerRepository passengerRepository,
             IPassportIdentityRepository passportIdentityRepository,
-            IContactRepository contactRepository)
+            IContactRepository contactRepository,
+            ITicketService ticketService)
         {
             _bookingRepository = bookingRepository;
             _flightRepository = flightRepository;
@@ -39,36 +41,37 @@ namespace ServerLibrary.Services.Implementations
             _passengerRepository = passengerRepository;
             _passportIdentityRepository = passportIdentityRepository;
             _contactRepository = contactRepository;
+            _ticketService = ticketService;
         }
 
 
-        public async Task<GeneralReponse> BookSeatAsync(CreateBookingDto createBooking)
+        public async Task<BookingResponse> BookSeatAsync(CreateBookingDto createBooking)
         {
             // Step 1: Validate itinerary
             var itinerary = await _itineraryRepository.GetByIdAsync(createBooking.ItineraryId);
             if (itinerary == null)
-                return new GeneralReponse(false, "Itinerary does not exist.");
+                return new BookingResponse(false, "Itinerary does not exist.", null);
 
             // Step 2: Load current booking draft from Memento
             var draft = GetCurrentBookingState();
             if (draft == null)
-                return new GeneralReponse(false, "Booking history missing");
+                return new BookingResponse(false, "Booking history missing", null);
 
             // Step 3: Validate input sections
             if (draft.ContactDetails == null || draft.Passenger == null || draft.Passport == null)
-                return new GeneralReponse(false, "Incomplete booking draft");
+                return new BookingResponse(false, "Incomplete booking draft", null);
 
             var contactValidation = ValidateContactDetails(draft.ContactDetails);
-            if (!contactValidation.Flag) return contactValidation;
+            if (!contactValidation.Flag) return new BookingResponse(contactValidation.Flag, contactValidation.Message, null);
 
             var passengerValidation = ValidatePassenger(draft.Passenger);
-            if (!passengerValidation.Flag) return passengerValidation;
+            if (!passengerValidation.Flag) return new BookingResponse(passengerValidation.Flag, passengerValidation.Message, null);
 
             var passportValidation = ValidatePassport(draft.Passport);
-            if (!passportValidation.Flag) return passportValidation;
+            if (!passportValidation.Flag) return new BookingResponse(passportValidation.Flag, passportValidation.Message, null);
 
-            if (string.IsNullOrEmpty(createBooking.PaymentIntentId))
-                return new GeneralReponse(false, "Payment intent is null.");
+            if (string.IsNullOrEmpty(draft.PaymentIntentId))
+                return new BookingResponse(false, "Payment intent is null.", null);
 
             // Step 4: Map and persist entities
             try
@@ -90,6 +93,7 @@ namespace ServerLibrary.Services.Implementations
                 // Step 5: Create booking
                 var booking = _mapper.Map<Booking>(createBooking);
                 booking.PassengerId = passengerId;
+                booking.PaymentIntentId = draft.PaymentIntentId;
                 booking.BookingDate = DateTime.Now;
 
                 // Step 6: Update seat availability
@@ -97,21 +101,34 @@ namespace ServerLibrary.Services.Implementations
                 {
                     var existingFlight = await _flightRepository.GetByFlightNumberAsync(segment.FlightNumber);
                     if (existingFlight == null)
-                        return new GeneralReponse(false, $"Flight {segment.FlightNumber} does not exist.");
+                        return new BookingResponse(false, $"Flight {segment.FlightNumber} does not exist.", null);
 
                     if (existingFlight.AvailableSeats < createBooking.PassengerNumberSelected)
-                        return new GeneralReponse(false, $"Not enough seats on flight {segment.FlightNumber}.");
+                        return new BookingResponse(false, $"Not enough seats on flight {segment.FlightNumber}.", null);
 
                     existingFlight.AvailableSeats -= createBooking.PassengerNumberSelected;
                     await _flightRepository.UpdateAsync(existingFlight);
                 }
 
                 // Step 7: Save booking
-                return await _bookingRepository.CreateAsync(booking);
+                var (createResult,bookingId) =  await _bookingRepository.CreateAsync(booking);
+                if (!createResult.Flag || !bookingId.HasValue)
+                    return new BookingResponse(createResult.Flag, createResult.Message, null);
+
+
+                // Step 8: Generate tickets
+                var createTicket = new CreateTicketDto { BookingId = bookingId.Value };
+                var (ticketResponse,tickets) = await _ticketService.GenerateTicketAsync(createTicket);
+                if (!ticketResponse.Flag || tickets == null && !tickets!.Any()) return new BookingResponse(ticketResponse.Flag, ticketResponse.Message, null);
+
+
+
+
+                return new BookingResponse(true, "Successfuly booked and generated tickets", tickets);
             }
             catch(Exception ex)
             {
-                return new GeneralReponse(false, ex.Message);
+                return new BookingResponse(false, ex.Message, null);
             }
         }
 
@@ -148,7 +165,14 @@ namespace ServerLibrary.Services.Implementations
         }
         public void ClearBookingHistory()
         {
-            _httpContextAccessor.HttpContext!.Response.Cookies.Delete(".AspNetCore.Session");
+            _httpContextAccessor.HttpContext!.Session.Clear();
+            _httpContextAccessor.HttpContext!.Response.Cookies.Delete(".AspNetCore.Session", new CookieOptions
+            {
+                Path = "/",
+                Secure = true,
+                HttpOnly = true,
+                SameSite = SameSiteMode.None
+            });
         }
         private GeneralReponse ValidateContactDetails(CreateContactDetailsDto contactDetails)
         {

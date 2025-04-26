@@ -24,6 +24,7 @@ namespace ServerLibrary.Data
         public DbSet<Booking> Bookings { get; set; }
         public DbSet<ContactDetails> ContactDetails { get; set; }
         public DbSet<PassportIdentity> PassportIdentities { get; set; }
+        public DbSet<Ticket> Tickets { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -156,7 +157,19 @@ namespace ServerLibrary.Data
                 .HasForeignKey(b => b.ItineraryId)
                 .OnDelete(DeleteBehavior.Cascade);
 
+                modelBuilder.Entity<Ticket>()
+                 .HasOne(t => t.Booking)
+                 .WithMany(b => b.Tickets)
+                 .HasForeignKey(t => t.BookingId)
+                 .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Ticket>()
+                .HasOne(f => f.Flight)
+                .WithMany(t => t.Tickets)
+                .HasForeignKey(t => t.FlightNumber)
+                .OnDelete(DeleteBehavior.Cascade);
         }
+
 
 
     }

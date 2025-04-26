@@ -8,6 +8,8 @@ namespace BaseEntity.Dtos
         [Required]
         public string Name { get; set; } = string.Empty;
         [Required]
+        public string IataCode { get; set; } = string.Empty;
+        [Required]
         public IFormFile? AirlineImage { get; set; }
         [Required]
         public string AirlineBgColor { get; set; } = "#0D78C9FF";

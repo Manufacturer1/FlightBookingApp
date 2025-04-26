@@ -15,25 +15,25 @@ namespace ServerLibrary.Repositories.Implementations
         {
             this.db = db;
         }
-        public async Task<GeneralReponse> CreateAsync(Booking booking)
+        public async Task<(GeneralReponse Response, int? BookingId)> CreateAsync(Booking booking)
         {
-            if (booking == null) return new GeneralReponse(false, "Booking is null.");
+            if (booking == null)
+                return (new GeneralReponse(false, "Booking is null."), null);
 
             try
             {
                 await db.Bookings.AddAsync(booking);
                 await db.SaveChangesAsync();
-              
+                return (new GeneralReponse(true, $"Booking {booking.Id} was added successfully"), booking.Id);
             }
             catch (DbException dbEx)
             {
-                return new GeneralReponse(false, $"Database error: {dbEx.Message}");
+                return (new GeneralReponse(false, $"Database error: {dbEx.Message}"), null);
             }
             catch (Exception ex)
             {
-                return new GeneralReponse(false, $"Something went wrong {ex.Message}");
+                return (new GeneralReponse(false, $"Something went wrong: {ex.Message}"), null);
             }
-            return new GeneralReponse(true, $"Booking {booking.Id} was added successfully");
         }
 
         public async Task<IEnumerable<Booking>> GetAllAsync()

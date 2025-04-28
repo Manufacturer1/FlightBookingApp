@@ -12,10 +12,12 @@ using ServerLibrary.AbstractFactory;
 using ServerLibrary.Adapter;
 using ServerLibrary.BackgroundServices;
 using ServerLibrary.Data;
+using ServerLibrary.Flyweight;
 using ServerLibrary.MappingProfiles;
 using ServerLibrary.Observer;
 using ServerLibrary.Repositories.Implementations;
 using ServerLibrary.Repositories.Interfaces;
+using ServerLibrary.Requests;
 using ServerLibrary.Services.Implementations;
 using ServerLibrary.Services.Interfaces;
 using Stripe;
@@ -68,6 +70,11 @@ builder.Configuration.GetSection("STRIPE_CONFIGURATION").Bind(stripeConf);
 builder.Services.AddSingleton(stripeConf);
 StripeConfiguration.ApiKey = stripeConf.SecretKey;
 
+//Currency configuration
+var currencyConfig = builder.Configuration.GetSection("CURRENCY_SECTION");
+builder.Services.Configure<CurrencySettings>(currencyConfig);
+
+builder.Services.AddHttpClient<CurrencyRequest>();
 
 
 //Database configuration
@@ -190,6 +197,11 @@ builder.Services.AddScoped<IDiscountService>(provider => provider.GetRequiredSer
 
 
 
+//FlyWeight registration
+builder.Services.AddHttpClient<CurrencyRequest>();
+builder.Services.AddSingleton<CurrencyRequest>();
+builder.Services.AddSingleton<CurrencyFactory>();
+
 // Background service
 builder.Services.AddHostedService<FlightDateUpdaterService>();
 
@@ -227,7 +239,8 @@ builder.Services.AddScoped<IAmenityService,AmenityService>();
 builder.Services.AddScoped<IPaymentService,StripePaymentService>();
 builder.Services.AddScoped<IBookingService,BookingService>();
 builder.Services.AddScoped<ITicketService, TicketService>();
-   
+builder.Services.AddScoped<ICurrencyService, CurrencyService>();
+
 
 
 var app = builder.Build();

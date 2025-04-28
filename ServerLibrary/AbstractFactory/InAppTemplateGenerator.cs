@@ -26,5 +26,56 @@ namespace ServerLibrary.AbstractFactory
 
             return sb.ToString();
         }
+        public string GenerateCreatedDiscountTemplate(Discount discount)
+        {
+            var sb = new StringBuilder();
+
+            sb.AppendLine("🎉 Special Discount Available! 🎉");
+            sb.AppendLine();
+            sb.AppendLine($"Discount Name: {discount.Name}");
+            sb.AppendLine($"You Save: {discount.Percentage}% OFF");
+            sb.AppendLine();
+            sb.AppendLine(discount.IsActive
+                ? "This offer is currently active!"
+                : "Note: This offer is not currently active");
+            sb.AppendLine();
+            sb.AppendLine("Hurry up and book your flight to take advantage of this great deal!");
+
+            return sb.ToString();
+        }
+
+        public string GenerateRemovedDiscountTemplate(Discount discount)
+        {
+            var sb = new StringBuilder();
+
+            sb.AppendLine("⚠️ Discount Removed");
+            sb.AppendLine();
+            sb.AppendLine($"Discount Name: {discount.Name}");
+            sb.AppendLine($"Previous Savings: {discount.Percentage}% OFF");
+            sb.AppendLine();
+            sb.AppendLine("This discount is no longer available.");
+            sb.AppendLine();
+            sb.AppendLine("Check our app for other current promotions!");
+
+            return sb.ToString();
+        }
+
+        public string GenerateUpdatedDiscountTemplate(Discount discount)
+        {
+            var sb = new StringBuilder();
+
+            sb.AppendLine("✏️ Discount Updated");
+            sb.AppendLine();
+            sb.AppendLine($"Discount Name: {discount.Name}");
+            sb.AppendLine($"New Savings: {discount.Percentage}% OFF");
+            sb.AppendLine();
+            sb.AppendLine(discount.IsActive
+                ? "✅ This offer is currently active!"
+                : "⏸️ Note: This offer is currently paused");
+            sb.AppendLine();
+            sb.AppendLine("Book now to take advantage of this updated offer!");
+
+            return sb.ToString();
+        }
     }
 }

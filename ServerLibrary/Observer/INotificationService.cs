@@ -1,7 +1,7 @@
 ﻿using BaseEntity.Dtos;
 using BaseEntity.Responses;
 
-namespace ServerLibrary.Services.Interfaces
+namespace ServerLibrary.Observer
 {
     public interface INotificationService
     {

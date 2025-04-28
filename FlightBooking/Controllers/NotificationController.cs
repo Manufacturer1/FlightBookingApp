@@ -1,7 +1,7 @@
 ﻿using BaseEntity.Dtos;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using ServerLibrary.Services.Interfaces;
+using ServerLibrary.Observer;
 
 namespace FlightBooking.Controllers
 {

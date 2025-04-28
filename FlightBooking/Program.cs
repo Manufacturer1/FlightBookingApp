@@ -13,12 +13,14 @@ using ServerLibrary.Adapter;
 using ServerLibrary.BackgroundServices;
 using ServerLibrary.Data;
 using ServerLibrary.MappingProfiles;
+using ServerLibrary.Observer;
 using ServerLibrary.Repositories.Implementations;
 using ServerLibrary.Repositories.Interfaces;
 using ServerLibrary.Services.Implementations;
 using ServerLibrary.Services.Interfaces;
 using Stripe;
 using System.Text;
+using Discount = BaseEntity.Entities.Discount;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -177,6 +179,16 @@ builder.Services.AddScoped<Func<NotificationChannel, INotificationFactory>>(serv
     };
 });
 
+// Observer register
+builder.Services.AddScoped<INotificationService, NotificationService>();
+builder.Services.AddScoped(provider => (ServerLibrary.Observer.IObserver<Discount>)provider.GetRequiredService<INotificationService>());
+builder.Services.AddScoped<INotificationTemplateGenerator, InAppTemplateGenerator>();
+
+// Register ObservableDiscountService
+builder.Services.AddScoped<ObservableDiscountService>();
+builder.Services.AddScoped<IDiscountService>(provider => provider.GetRequiredService<ObservableDiscountService>());
+
+
 
 // Background service
 builder.Services.AddHostedService<FlightDateUpdaterService>();
@@ -212,11 +224,10 @@ builder.Services.AddScoped<IBaggageService,BaggageService>();
 builder.Services.AddScoped<IItineraryService, ItineraryService>();
 builder.Services.AddScoped<IAirportService,AirportService>();
 builder.Services.AddScoped<IAmenityService,AmenityService>();
-builder.Services.AddScoped<IDiscountService,ServerLibrary.Services.Implementations.DiscountService>();
 builder.Services.AddScoped<IPaymentService,StripePaymentService>();
 builder.Services.AddScoped<IBookingService,BookingService>();
 builder.Services.AddScoped<ITicketService, TicketService>();
-builder.Services.AddScoped<INotificationService, NotificationService>();    
+   
 
 
 var app = builder.Build();

@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Http;
 using ServerLibrary.Decorator;
 using ServerLibrary.Repositories.Interfaces;
 using ServerLibrary.Services.Interfaces;
+using ServerLibrary.Strategy;
 
 namespace ServerLibrary.Services.Implementations
 {
@@ -38,64 +39,41 @@ namespace ServerLibrary.Services.Implementations
                 x.Origin.Equals(flightCardRequest.Origin, StringComparison.OrdinalIgnoreCase) &&
                 x.Destination.Equals(flightCardRequest.Destination, StringComparison.OrdinalIgnoreCase));
 
-            string classTypeString = flightCardRequest.ClassType.ToString();
-            string tripTypeString = flightCardRequest.TripType.ToString();
+            // Set strategy
+            IFlightFilterStrategy strategy = withoutDate
+                ? new FlightFilterWithoutDate(_mapper)
+                : new FlightFilterWithDate(_mapper);
+
+            var filterContext = new FlightFilterContext(strategy);
 
             var result = new List<ItineraryCardResponseDto>();
 
             foreach (var itinerary in searchedItineraries)
             {
-                IEnumerable<FlightCardResponseDto> matchingFlights;
-
-
-                if (withoutDate)
-                {
-                    
-                    matchingFlights = itinerary.Segments!
-                        .OrderBy(s => s.SegmentOrder)
-                        .Where(s => s.Flight != null &&
-                                    s.Flight.ClassType!.Equals(classTypeString, StringComparison.OrdinalIgnoreCase) &&
-                                    s.Flight.TripType.Equals(tripTypeString, StringComparison.OrdinalIgnoreCase))
-                        .Select(s => _mapper.Map<FlightCardResponseDto>(s.Flight))
-                        .ToList();
-                }
-                else
-                {
-                  
-                    matchingFlights = itinerary.Segments!
-                        .OrderBy(s => s.SegmentOrder)
-                        .Where(s => s.Flight != null &&
-                                    s.Flight.ClassType!.Equals(classTypeString, StringComparison.OrdinalIgnoreCase) &&
-                                    s.Flight.DepartureDate.Date == flightCardRequest.DepartureDate.Date &&
-                                    s.Flight.TripType.Equals(tripTypeString, StringComparison.OrdinalIgnoreCase))
-                        .Where(s => !flightCardRequest.ReturnDate.HasValue ||
-                                    s.Flight!.ArrivalDate.Date == flightCardRequest.ReturnDate.Value.Date)
-                        .Select(s => _mapper.Map<FlightCardResponseDto>(s.Flight))
-                        .ToList();
-                }
+                var matchingFlights = filterContext.FilterFlights(itinerary, flightCardRequest).ToList();
 
                 if (matchingFlights.Any())
                 {
-                    var mappedIinerary = _mapper.Map<GetItineraryDto>(itinerary);
-                   
-                    foreach(var flight in matchingFlights)
+                    var mappedItinerary = _mapper.Map<GetItineraryDto>(itinerary);
+
+                    foreach (var flight in matchingFlights)
                     {
                         flight.FinalPrice = await CalculateFlightPrice(flight.FlightNumber);
                     }
 
-                    mappedIinerary.CalculatedPrice = matchingFlights.Sum((flight) => flight.FinalPrice);
+                    mappedItinerary.CalculatedPrice = matchingFlights.Sum(f => f.FinalPrice);
 
-                   var card = new ItineraryCardResponseDto
+                    result.Add(new ItineraryCardResponseDto
                     {
-                        Itinerary = mappedIinerary,
-                        Flights = matchingFlights.ToList(),
-                    };
-                    result.Add(card);
+                        Itinerary = mappedItinerary,
+                        Flights = matchingFlights
+                    });
                 }
             }
 
             return result;
         }
+
 
         public async Task<GeneralReponse> AddAsync(CreateFlightDto createFlight)
         {

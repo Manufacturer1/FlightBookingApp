@@ -3,9 +3,11 @@ using BaseEntity.Dtos;
 using BaseEntity.Entities;
 using BaseEntity.Responses;
 using Microsoft.AspNetCore.Http;
+using ServerLibrary.Command;
 using ServerLibrary.Memento;
 using ServerLibrary.Repositories.Interfaces;
 using ServerLibrary.Services.Interfaces;
+using ServerLibrary.Validators;
 using System.Transactions;
 
 namespace ServerLibrary.Services.Implementations
@@ -22,6 +24,9 @@ namespace ServerLibrary.Services.Implementations
         private readonly IPassportIdentityRepository _passportIdentityRepository;
         private readonly IContactRepository _contactRepository;
         private readonly ITicketService _ticketService;
+        private readonly IContactValidator _contactValidator;
+        private readonly IPassportValidator _passportValidator;
+        private readonly IPassengerValidator _passengerValidator;
 
         public BookingService(IBookingRepository bookingRepository,
             IFlightRepository flightRepository,
@@ -31,7 +36,10 @@ namespace ServerLibrary.Services.Implementations
             IPassengerRepository passengerRepository,
             IPassportIdentityRepository passportIdentityRepository,
             IContactRepository contactRepository,
-            ITicketService ticketService)
+            ITicketService ticketService,
+            IContactValidator contactValidator,
+            IPassportValidator passportValidator,
+            IPassengerValidator passengerValidator)
         {
             _bookingRepository = bookingRepository;
             _flightRepository = flightRepository;
@@ -43,131 +51,45 @@ namespace ServerLibrary.Services.Implementations
             _passportIdentityRepository = passportIdentityRepository;
             _contactRepository = contactRepository;
             _ticketService = ticketService;
+            _contactValidator = contactValidator;
+            _passportValidator = passportValidator;
+            _passengerValidator = passengerValidator;
         }
 
-
-    public async Task<BookingResponse> BookSeatAsync(CreateBookingDto createBooking)
-    {
-        using (var scope = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled))
+        public async Task<BookingResponse> BookSeatAsync(CreateBookingDto createBooking)
         {
-            // Step 1: Validate itinerary
-            var itinerary = await _itineraryRepository.GetByIdAsync(createBooking.ItineraryId);
-            if (itinerary == null)
-                return new BookingResponse(false, "Itinerary does not exist.", null);
-
-            // Step 2: Load current booking draft from Memento
             var draft = GetCurrentBookingState();
             if (draft == null)
-                return new BookingResponse(false, "Booking history missing", null);
+                return new BookingResponse(false, "Draft is null", null);
 
-            // Step 3: Validate input sections
-            if (draft.ContactDetails == null || draft.Passenger == null || draft.Passport == null)
-                return new BookingResponse(false, "Incomplete booking draft", null);
+            var itineraryCmd = new ValidateItineraryCommand(_itineraryRepository, createBooking.ItineraryId);
+            var validateDraftCmd = new ValidateBookingDraftCommand(draft);
+            var validateSectionDraftCommand = new ValidateBookingDraftDetailsCommand(_contactValidator, _passengerValidator, _passportValidator, draft);
 
-            var contactValidation = ValidateContactDetails(draft.ContactDetails);
-            if (!contactValidation.Flag) return new BookingResponse(contactValidation.Flag, contactValidation.Message, null);
+            var processPassengerCmd = new ProcessPassengerCommand(_mapper, _passengerRepository, _contactRepository,_passportIdentityRepository, draft);
 
-            var passengerValidation = ValidatePassenger(draft.Passenger);
-            if (!passengerValidation.Flag) return new BookingResponse(passengerValidation.Flag, passengerValidation.Message, null);
+            var updateSeatCmd = new UpdateSeatAvailabilityCommand(_flightRepository, itineraryCmd,createBooking.PassengerNumberSelected);
 
-            var passportValidation = ValidatePassport(draft.Passport);
-            if (!passportValidation.Flag) return new BookingResponse(passportValidation.Flag, passportValidation.Message, null);
+            var createBookingCmd = new CreateBookingCommand(_mapper, _bookingRepository,createBooking, processPassengerCmd, draft);
 
-            if (string.IsNullOrEmpty(draft.PaymentIntentId))
-                return new BookingResponse(false, "Payment intent is null.", null);
+            var generateTicketsCmd = new GenerateTicketsCommand(_ticketService, createBookingCmd);
 
-            // Step 4: Map and persist entities
-            try
-            {
-                var contact = _mapper.Map<ContactDetails>(draft.ContactDetails);
-                var passport = _mapper.Map<PassportIdentity>(draft.Passport);
-                var passenger = _mapper.Map<Passenger>(draft.Passenger);
 
-                int contactId = 0;
-                int passportId = 0;
-                int passengerId = 0;
+            var handler = new BookingCommandInvoker();
+            handler.AddCommand(itineraryCmd);
+            handler.AddCommand(validateDraftCmd);
+            handler.AddCommand(validateSectionDraftCommand);
+            handler.AddCommand(processPassengerCmd);
+            handler.AddCommand(updateSeatCmd);
+            handler.AddCommand(createBookingCmd);
+            handler.AddCommand(generateTicketsCmd);
 
-                var passengers = await _passengerRepository.GetAllAsync();
-                var existingPassenger = passengers
-                    .Where(x => x.ContactDetails!.Email.Equals(draft.ContactDetails.Email, StringComparison.OrdinalIgnoreCase))
-                    .FirstOrDefault();
 
-                if (existingPassenger != null)
-                {
-                    contact.Id = existingPassenger.ContactDetailsId;
-                    passport.Id = existingPassenger.PassportIdentityId;
-                    passenger.Id = existingPassenger.Id;
+            var result = await handler.ExecuteAllAsync();
 
-                    var contactUpdateResponse = await _contactRepository.UpdateAsync(contact);
-                    if (!contactUpdateResponse.Flag)
-                        return new BookingResponse(false, contactUpdateResponse.Message, null);
-
-                    var passportUpdateResponse = await _passportIdentityRepository.UpdateAsync(passport);
-                    if (!passportUpdateResponse.Flag)
-                        return new BookingResponse(false, passportUpdateResponse.Message, null);
-
-                    var passengerUpdateResponse = await _passengerRepository.UpdateAsync(passenger);
-                    if (!passengerUpdateResponse.Flag)
-                        return new BookingResponse(false, passengerUpdateResponse.Message, null);
-
-                    contactId = existingPassenger.ContactDetailsId;
-                    passportId = existingPassenger.PassportIdentityId;
-                    passengerId = existingPassenger.Id;
-                }
-                else
-                {
-                    contactId = await _contactRepository.CreateAsync(contact);
-                    passportId = await _passportIdentityRepository.CreateAsync(passport);
-
-                    passenger.ContactDetailsId = contactId;
-                    passenger.PassportIdentityId = passportId;
-                    passengerId = await _passengerRepository.CreateAsync(passenger);
-                }
-
-                // Step 5: Create booking
-                var booking = _mapper.Map<Booking>(createBooking);
-                booking.PassengerId = passengerId;
-                booking.PaymentIntentId = draft.PaymentIntentId;
-                booking.BookingDate = DateTime.Now;
-
-                // Step 6: Update seat availability
-                foreach (var segment in itinerary.Segments!)
-                {
-                    var existingFlight = await _flightRepository.GetByFlightNumberAsync(segment.FlightNumber);
-                    if (existingFlight == null)
-                        return new BookingResponse(false, $"Flight {segment.FlightNumber} does not exist.", null);
-
-                    if (existingFlight.AvailableSeats < createBooking.PassengerNumberSelected)
-                        return new BookingResponse(false, $"Not enough seats on flight {segment.FlightNumber}.", null);
-
-                    existingFlight.AvailableSeats -= createBooking.PassengerNumberSelected;
-                    await _flightRepository.UpdateAsync(existingFlight);
-                }
-
-                // Step 7: Save booking
-                var (createResult, bookingId) = await _bookingRepository.CreateAsync(booking);
-                if (!createResult.Flag || !bookingId.HasValue)
-                    return new BookingResponse(createResult.Flag, createResult.Message, null);
-
-                // Step 8: Generate tickets
-                var createTicket = new CreateTicketDto { BookingId = bookingId.Value };
-                var (ticketResponse, tickets) = await _ticketService.GenerateTicketAsync(createTicket);
-                if (!ticketResponse.Flag || tickets == null || !tickets.Any())
-                    return new BookingResponse(ticketResponse.Flag, ticketResponse.Message, null);
-
-                // If everything is OK, complete the transaction
-                scope.Complete();
-
-                return new BookingResponse(true, "Successfully booked and generated tickets", tickets);
-            }
-            catch (Exception ex)
-            {
-                return new BookingResponse(false, ex.Message, null);
-            }
+            return new BookingResponse(result.Success,result.Message,generateTicketsCmd.GeneratedTickets);
+         
         }
-    }
-
-
 
     public async Task<IEnumerable<GetBookingDto>> GetAllBookingsAsync()
         {
@@ -210,47 +132,7 @@ namespace ServerLibrary.Services.Implementations
                 SameSite = SameSiteMode.None
             });
         }
-        private GeneralReponse ValidateContactDetails(CreateContactDetailsDto contactDetails)
-        {
-            if (string.IsNullOrEmpty(contactDetails.Name) ||
-                string.IsNullOrEmpty(contactDetails.Surname) ||
-                string.IsNullOrEmpty(contactDetails.PhoneNumber) ||
-                string.IsNullOrEmpty(contactDetails.Email)) return new GeneralReponse(false, "Misssing some contact data.");
 
-
-
-            return new GeneralReponse(true,"Contact validated");
-                
-        }
-        private GeneralReponse ValidatePassenger(CreatePassengerDto passenger)
-        {
-            if(string.IsNullOrEmpty(passenger.Name) || 
-                string.IsNullOrEmpty(passenger.Surname) || 
-                string.IsNullOrEmpty(passenger.Nationality)
-               )
-                return new GeneralReponse(false,"Missing some passenger data.");
-            if (passenger.BirthDay.Date >= DateTime.Now.Date)
-                return new GeneralReponse(false, "The birthday cannot be in present or future.");
-
-
-            return new GeneralReponse(true,"Passenger created.");
-        }
-        private GeneralReponse ValidatePassport(CreatePassportDto passport) 
-        {
-            if (string.IsNullOrEmpty(passport.PassportNumber) ||
-                string.IsNullOrEmpty(passport.Country)
-              )
-            {
-                return new GeneralReponse(false, "Missing or invalid passport identity data.");
-            }
-            if (!passport.ExpiryDate.HasValue ||
-                passport.ExpiryDate.Value.Date <= DateTime.Now.Date)
-            {
-                return new GeneralReponse(false, "The expiration passport date is not valid.");
-            }
-
-            return new GeneralReponse(true, "Passport data added");
-        }
 
     }
 }

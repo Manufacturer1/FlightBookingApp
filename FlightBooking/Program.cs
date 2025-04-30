@@ -20,6 +20,7 @@ using ServerLibrary.Repositories.Interfaces;
 using ServerLibrary.Requests;
 using ServerLibrary.Services.Implementations;
 using ServerLibrary.Services.Interfaces;
+using ServerLibrary.Validators;
 using Stripe;
 using System.Text;
 using Discount = BaseEntity.Entities.Discount;
@@ -201,6 +202,13 @@ builder.Services.AddScoped<IDiscountService>(provider => provider.GetRequiredSer
 builder.Services.AddHttpClient<CurrencyRequest>();
 builder.Services.AddSingleton<CurrencyRequest>();
 builder.Services.AddSingleton<CurrencyFactory>();
+
+
+//command register
+builder.Services.AddScoped<IContactValidator,ContactValidator>();
+builder.Services.AddScoped<IPassengerValidator,PassengerValidator>();   
+builder.Services.AddScoped<IPassportValidator,PassportValidator>();
+
 
 // Background service
 builder.Services.AddHostedService<FlightDateUpdaterService>();

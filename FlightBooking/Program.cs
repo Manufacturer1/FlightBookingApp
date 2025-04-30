@@ -12,6 +12,7 @@ using ServerLibrary.AbstractFactory;
 using ServerLibrary.Adapter;
 using ServerLibrary.BackgroundServices;
 using ServerLibrary.Data;
+using ServerLibrary.Facade;
 using ServerLibrary.Flyweight;
 using ServerLibrary.MappingProfiles;
 using ServerLibrary.Observer;
@@ -208,6 +209,9 @@ builder.Services.AddSingleton<CurrencyFactory>();
 builder.Services.AddScoped<IContactValidator,ContactValidator>();
 builder.Services.AddScoped<IPassengerValidator,PassengerValidator>();   
 builder.Services.AddScoped<IPassportValidator,PassportValidator>();
+
+//Facade register
+builder.Services.AddScoped<IBookingFacade,BookingFacade>(); 
 
 
 // Background service

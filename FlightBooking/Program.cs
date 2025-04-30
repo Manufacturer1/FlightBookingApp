@@ -13,6 +13,7 @@ using ServerLibrary.Adapter;
 using ServerLibrary.BackgroundServices;
 using ServerLibrary.Data;
 using ServerLibrary.Facade;
+using ServerLibrary.FactoryMethod;
 using ServerLibrary.Flyweight;
 using ServerLibrary.MappingProfiles;
 using ServerLibrary.Observer;
@@ -213,6 +214,9 @@ builder.Services.AddScoped<IPassportValidator,PassportValidator>();
 //Facade register
 builder.Services.AddScoped<IBookingFacade,BookingFacade>(); 
 
+
+//Factory Method registration
+builder.Services.AddScoped<IBookingCommandFactory,BookingCommandFactory>();
 
 // Background service
 builder.Services.AddHostedService<FlightDateUpdaterService>();

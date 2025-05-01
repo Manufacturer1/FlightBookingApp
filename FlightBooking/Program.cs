@@ -11,6 +11,7 @@ using Microsoft.OpenApi.Models;
 using ServerLibrary.AbstractFactory;
 using ServerLibrary.Adapter;
 using ServerLibrary.BackgroundServices;
+using ServerLibrary.Builder;
 using ServerLibrary.Data;
 using ServerLibrary.Facade;
 using ServerLibrary.FactoryMethod;
@@ -217,6 +218,11 @@ builder.Services.AddScoped<IBookingFacade,BookingFacade>();
 
 //Factory Method registration
 builder.Services.AddScoped<IBookingCommandFactory,BookingCommandFactory>();
+
+
+// Builder register
+builder.Services.AddScoped<ITicketBuilder,TicketBuilder>();
+builder.Services.AddScoped<ITicketDirectory,TicketDirectory>();
 
 // Background service
 builder.Services.AddHostedService<FlightDateUpdaterService>();

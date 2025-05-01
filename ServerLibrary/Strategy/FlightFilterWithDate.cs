@@ -16,7 +16,7 @@ namespace ServerLibrary.Strategy
         {
             string classTypeString = request.ClassType.ToString();
             string tripTypeString = request.TripType.ToString();
-            bool isDate = itinerary.DepartureDate.Date == request.DepartureDate.Date && itinerary.ArrivalDate.Date == request.ReturnDate!.Value.Date;
+            bool isDate = itinerary.DepartureDate.Date == request.DepartureDate.Date && itinerary.ReturnSegmentDate.Date == request.ReturnDate!.Value.Date;
 
             var segments = itinerary
                 .Segments!.Where(x => x.IsReturnSegment == false);

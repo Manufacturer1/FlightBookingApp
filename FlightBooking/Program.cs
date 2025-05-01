@@ -225,7 +225,7 @@ builder.Services.AddScoped<ITicketBuilder,TicketBuilder>();
 builder.Services.AddScoped<ITicketDirectory,TicketDirectory>();
 
 // Background service
-builder.Services.AddHostedService<FlightDateUpdaterService>();
+builder.Services.AddHostedService<ItineraryBackgroundService>();
 
 
 // Repositories register

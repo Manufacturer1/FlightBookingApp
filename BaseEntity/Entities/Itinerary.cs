@@ -15,9 +15,13 @@ namespace BaseEntity.Entities
             .Sum(segment => segment.Flight!.BasePrice) ?? 0m;
 
         [NotMapped]
-        public DateTime DepartureDate => Segments?.FirstOrDefault()?.Flight?.DepartureDate ?? DateTime.MinValue;
+        public DateTime DepartureDate => Segments?.Where(x => x.IsReturnSegment == false).FirstOrDefault()?.Flight?.DepartureDate ?? DateTime.MinValue;
         [NotMapped]
-        public DateTime ArrivalDate => Segments?.LastOrDefault()?.Flight?.ArrivalDate ?? DateTime.MinValue;
+        public DateTime ArrivalDate => Segments?.Where(x => x.IsReturnSegment == false).LastOrDefault()?.Flight?.ArrivalDate ?? DateTime.MinValue;
+        [NotMapped]
+        public bool HasReturnSegments => Segments!.Any(x => x.IsReturnSegment == true);
+        [NotMapped]
+        public DateTime ReturnSegmentDate => CalculateRoundTripDate();
         [NotMapped]
         public string DepartureTime => Segments?.FirstOrDefault()?.Flight?.DepartureTime ?? string.Empty;
         [NotMapped]
@@ -45,6 +49,14 @@ namespace BaseEntity.Entities
             if(duration < TimeSpan.Zero) duration = duration.Add(TimeSpan.FromDays(1));
 
             return $"{(int)duration.TotalHours!}h {duration.Minutes}m";
+        }
+        private DateTime CalculateRoundTripDate()
+        {
+            if(Segments != null && HasReturnSegments)
+            {
+                return Segments.Where(x => x.IsReturnSegment)!.LastOrDefault()!.Flight!.ArrivalDate;
+            }
+            return ArrivalDate;
         }
     }
 }

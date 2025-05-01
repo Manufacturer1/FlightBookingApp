@@ -51,6 +51,7 @@ namespace ServerLibrary.Services.Implementations
             foreach (var itinerary in searchedItineraries)
             {
                 var matchingFlights = filterContext.FilterFlights(itinerary, flightCardRequest).ToList();
+           
 
                 if (matchingFlights.Any())
                 {

@@ -28,30 +28,32 @@ namespace ServerLibrary.Services.Implementations
             if (itineraryDto.Segments == null || !itineraryDto.Segments.Any())
                 return new GeneralReponse(false, "At least one flight segment is required");
 
-            var flights = new List<Flight>();
-            foreach (var segment in itineraryDto.Segments)
-            {
-                var flight = await _flightRepository.GetByFlightNumberAsync(segment.FlightNumber);
-                if (flight == null)
-                    return new GeneralReponse(false, $"Flight {segment.FlightNumber} was not found");
-
-
-                flights.Add(flight);
-            }
-
             var itinerary = _mapper.Map<Itinerary>(itineraryDto);
+            itinerary.Segments = new List<FlightSegment>();
 
-            itinerary.Segments = flights.Select((flight, index) => new FlightSegment
+            int outboundOrder = 1;
+            int returnOrder = 1;
+
+            foreach (var segmentDto in itineraryDto.Segments)
             {
-                FlightNumber = flight.FlightNumber,
-                SegmentOrder = index + 1,
-            }).ToList();
+                var flight = await _flightRepository.GetByFlightNumberAsync(segmentDto.FlightNumber);
+                if (flight == null)
+                    return new GeneralReponse(false, $"Flight {segmentDto.FlightNumber} was not found");
 
+                var segment = new FlightSegment
+                {
+                    FlightNumber = flight.FlightNumber,
+                    IsReturnSegment = segmentDto.IsReturnSegment,
+                    SegmentOrder = segmentDto.IsReturnSegment ? returnOrder++ : outboundOrder++
+                };
+
+                itinerary.Segments.Add(segment);
+            }
 
             await _itineraryRepository.AddAsync(itinerary);
             return new GeneralReponse(true, $"Itinerary {itinerary.Id} was created successfully");
-            
         }
+
 
         public async Task<IEnumerable<GetItineraryDto>> GetAllAsync()
         {

@@ -6,5 +6,7 @@ namespace BaseEntity.Dtos
     {
         [Required]
         public string FlightNumber { get; set; } = string.Empty;
+        [Required]
+        public bool IsReturnSegment { get; set; } = false;
     }
 }

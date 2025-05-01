@@ -11,7 +11,7 @@ namespace BaseEntity.Entities
         public string? StopTime {  get; set; } = string.Empty;
         [NotMapped]
         public decimal TotalPrice => Segments?
-            .Where(segment => segment.Flight != null)
+            .Where(segment => segment.Flight != null && segment.IsReturnSegment == false)
             .Sum(segment => segment.Flight!.BasePrice) ?? 0m;
 
         [NotMapped]

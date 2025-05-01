@@ -17,8 +17,9 @@ namespace ServerLibrary.Strategy
         {
             string classTypeString = request.ClassType.ToString();
             string tripTypeString = request.TripType.ToString();
+            var segments = itinerary.Segments!.Where(x => x.IsReturnSegment == false);
 
-            return itinerary.Segments!
+            return segments
                 .OrderBy(s => s.SegmentOrder)
                 .Where(s => s.Flight != null &&
                             s.Flight.ClassType!.Equals(classTypeString, StringComparison.OrdinalIgnoreCase) &&

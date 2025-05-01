@@ -16,15 +16,18 @@ namespace ServerLibrary.Strategy
         {
             string classTypeString = request.ClassType.ToString();
             string tripTypeString = request.TripType.ToString();
+            bool isDate = itinerary.DepartureDate.Date == request.DepartureDate.Date && itinerary.ArrivalDate.Date == request.ReturnDate!.Value.Date;
 
-            return itinerary.Segments!
+            var segments = itinerary
+                .Segments!.Where(x => x.IsReturnSegment == false);
+
+            return segments
                 .OrderBy(s => s.SegmentOrder)
                 .Where(s => s.Flight != null &&
                             s.Flight.ClassType!.Equals(classTypeString, StringComparison.OrdinalIgnoreCase) &&
                             s.Flight.DepartureDate.Date == request.DepartureDate.Date &&
+                            isDate &&
                             s.Flight.TripType.Equals(tripTypeString, StringComparison.OrdinalIgnoreCase))
-                .Where(s => !request.ReturnDate.HasValue ||
-                            s.Flight!.ArrivalDate.Date == request.ReturnDate.Value.Date)
                 .Select(s => _mapper.Map<FlightCardResponseDto>(s.Flight));
         }
     }

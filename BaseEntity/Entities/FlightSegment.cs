@@ -6,6 +6,7 @@ namespace BaseEntity.Entities
     {
         public int Id { get; set; }
         public string FlightNumber { get; set; } = string.Empty;
+        public bool IsReturnSegment { get; set; } = false;
         public Flight? Flight { get; set; }
         public int ItineraryId { get; set; }
         public Itinerary? Itinerary { get; set;}

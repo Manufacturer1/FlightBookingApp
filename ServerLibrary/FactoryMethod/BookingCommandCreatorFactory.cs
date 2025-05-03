@@ -1,14 +1,13 @@
 ﻿using AutoMapper;
-using BaseEntity.Dtos;
+using BaseEntity.Enums;
 using ServerLibrary.Command;
-using ServerLibrary.Memento;
 using ServerLibrary.Repositories.Interfaces;
 using ServerLibrary.Services.Interfaces;
 using ServerLibrary.Validators;
 
 namespace ServerLibrary.FactoryMethod
 {
-    public class BookingCommandFactory : IBookingCommandFactory
+    public class BookingCommandCreatorFactory : IBookingCommandCreatorFactory
     {
         private readonly IItineraryRepository _itineraryRepo;
         private readonly IContactValidator _contactValidator;
@@ -22,7 +21,7 @@ namespace ServerLibrary.FactoryMethod
         private readonly IBookingRepository _bookingRepo;
         private readonly ITicketService _ticketService;
 
-        public BookingCommandFactory(
+        public BookingCommandCreatorFactory(
                   IItineraryRepository itineraryRepo,
                   IContactValidator contactValidator,
                   IPassengerValidator passengerValidator,
@@ -48,25 +47,34 @@ namespace ServerLibrary.FactoryMethod
                 _ticketService = ticketService;
         }
 
-        public ValidateBookingDraftDetailsCommand CreateBookingDraftDetailsCommand(BookingDraftMemento draft)
-            => new(_contactValidator, _passengerValidator,_passportValidator,draft);
+        public ICreateCommand<T> CreateBookingCommand<T>(BookingCommandType commandType) where T : IBookingCommand
+        {
+            return commandType switch
+            {
+                BookingCommandType.ValidateItinerary when typeof(T) == typeof(ValidateItineraryCommand)
+                    => (ICreateCommand<T>)new ValidateItineraryCommandCreator(_itineraryRepo),
 
-        public CreateBookingCommand CreateCreateBookingCommand(CreateBookingDto createBooking, ProcessPassengerCommand proccessPassangerCmd, BookingDraftMemento draft)
-            => new(_mapper,_bookingRepo,createBooking,proccessPassangerCmd,draft);
+                BookingCommandType.ValidateDraft when typeof(T) == typeof(ValidateBookingDraftCommand)
+                    => (ICreateCommand<T>)new ValidateBookingDraftCommandCreator(),
 
-        public GenerateTicketsCommand CreateGenerateTicketsCommand(CreateBookingCommand createBookingCmd)
-            => new(_ticketService, createBookingCmd);
+                BookingCommandType.ValidateSection when typeof(T) == typeof(ValidateBookingDraftDetailsCommand)
+                    => (ICreateCommand<T>)new ValidateBookingDraftDetailsCreator(_contactValidator, _passengerValidator, _passportValidator),
 
-        public ProcessPassengerCommand CreateProcessPassangerCommand(BookingDraftMemento draft)
-            => new(_mapper,_passengerRepo,_contactRepo,_passportRepo,draft);
+                BookingCommandType.ProcessPassenger when typeof(T) == typeof(ProcessPassengerCommand)
+                    => (ICreateCommand<T>)new ProcessPassengerCommandCreator(_mapper, _passengerRepo, _contactRepo, _passportRepo),
 
-        public UpdateSeatAvailabilityCommand CreateUpdateSeatCommand(ValidateItineraryCommand itineraryCmd, int passengerNumber)
-            => new(_flightRepo,itineraryCmd,passengerNumber);
+                BookingCommandType.UpdateSeat when typeof(T) == typeof(UpdateSeatAvailabilityCommand)
+                    => (ICreateCommand<T>)new UpdateSeatAvailabilityCommandCreator(_flightRepo),
 
-        public ValidateBookingDraftCommand CreateValidateBookingDraftCommand(BookingDraftMemento draft)
-            => new(draft);
+                BookingCommandType.CreateBooking when typeof(T) == typeof(CreateBookingCommand)
+                    => (ICreateCommand<T>)new CreateBookingCommandCreator(_mapper, _bookingRepo),
 
-        public ValidateItineraryCommand CreateValidateItineraryCommand(int itineraryId)
-           => new(_itineraryRepo,itineraryId);
+                BookingCommandType.GenerateTickets when typeof(T) == typeof(GenerateTicketsCommand)
+                    => (ICreateCommand<T>)new GenerateTicketCommandCreator(_ticketService),
+
+                _ => throw new ArgumentException($"Invalid or mismatched command type: {commandType}")
+            };
+        }
+
     }
 }

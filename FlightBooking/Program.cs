@@ -12,6 +12,7 @@ using ServerLibrary.AbstractFactory;
 using ServerLibrary.Adapter;
 using ServerLibrary.BackgroundServices;
 using ServerLibrary.Builder;
+using ServerLibrary.Command;
 using ServerLibrary.Data;
 using ServerLibrary.Facade;
 using ServerLibrary.FactoryMethod;
@@ -217,7 +218,8 @@ builder.Services.AddScoped<IBookingFacade,BookingFacade>();
 
 
 //Factory Method registration
-builder.Services.AddScoped<IBookingCommandFactory,BookingCommandFactory>();
+builder.Services.AddScoped<IBookingCommandCreatorFactory,BookingCommandCreatorFactory>();
+
 
 
 // Builder register
@@ -266,6 +268,23 @@ builder.Services.AddScoped<ICurrencyService, CurrencyService>();
 
 
 var app = builder.Build();
+
+/*var createBookingCommandCreator = app.Services.GetRequiredService<CreateBookingCommandCreator>();
+var GenerateTicketCommandCreator = app.Services.GetRequiredService<GenerateTicketCommandCreator>();
+var processPassengerCommandCreator = app.Services.GetRequiredService<ProcessPassengerCommandCreator>();
+var updateAvailabilityCommandCreator = app.Services.GetRequiredService<UpdateSeatAvailabilityCommandCreator>();
+var validateBookingDraftCreator = app.Services.GetRequiredService<ValidateBookingDraftCommandCreator>();
+var validateBookingDraftDetailsCommandCreator = app.Services.GetRequiredService<ValidateBookingDraftDetailsCreator>();
+var validateItineraryCommandCreator = app.Services.GetRequiredService<ValidateItineraryCommandCreator>();
+
+BookingCommandCreatorFactory.Register<CreateBookingCommand>(createBookingCommandCreator);
+BookingCommandCreatorFactory.Register<GenerateTicketsCommand>(GenerateTicketCommandCreator);
+BookingCommandCreatorFactory.Register<ProcessPassengerCommand>(processPassengerCommandCreator);
+BookingCommandCreatorFactory.Register<UpdateSeatAvailabilityCommand>(updateAvailabilityCommandCreator);
+BookingCommandCreatorFactory.Register<ValidateBookingDraftCommand>(validateBookingDraftCreator);
+BookingCommandCreatorFactory.Register<ValidateBookingDraftDetailsCommand>(validateBookingDraftDetailsCommandCreator);
+BookingCommandCreatorFactory.Register<ValidateItineraryCommand>(validateItineraryCommandCreator);*/
+
 
 // Admin Creation
 /*using (var scope = app.Services.CreateScope())
